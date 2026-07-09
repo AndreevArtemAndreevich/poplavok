@@ -271,6 +271,29 @@ body.night #welcome{background:radial-gradient(130% 90% at 50% 0%,#200d08 0%,#14
 #fcBarLabels{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-bottom:14px}
 .fc-sun{font-size:11px;color:var(--dim);text-align:center;margin-bottom:5px}
 .fc-src{font-size:9px;color:var(--dim);opacity:.55;text-align:center}
+
+/* ================= повтор поклёвки ================= */
+#replayBtn{position:absolute;right:14px;top:calc(132px + env(safe-area-inset-top));z-index:16;display:none}
+#replayBtn .badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;
+  background:var(--alert);color:#fff;font:700 10px/18px 'Inter',sans-serif;text-align:center;padding:0 4px}
+#replayView{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;
+  background:rgba(3,9,13,.97);
+  padding:calc(10px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom))}
+#replayView.open{display:flex}
+.rv-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rv-top .t{font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:1.5px}
+.rv-top .t small{display:block;font-family:'Inter',sans-serif;font-size:11px;color:var(--dim);
+  letter-spacing:.3px;margin-top:3px;font-weight:500}
+#rvCanvas{flex:1;min-height:0;width:100%;object-fit:contain;background:#000;
+  border-radius:16px;border:1px solid var(--stroke)}
+.rv-nav{display:flex;align-items:center;justify-content:center;gap:18px;margin:10px 0 0;
+  color:var(--dim);font-size:12px;font-weight:600}
+.rv-nav button{background:none;border:none;color:var(--ink);font-size:26px;line-height:1;cursor:pointer;padding:2px 12px}
+.rv-nav button:disabled{opacity:.25}
+.rv-bar{position:relative;margin:4px 2px 10px}
+.rv-bar input{width:100%;accent-color:var(--accent)}
+#rvMark{position:absolute;top:-3px;width:3px;height:8px;border-radius:2px;background:var(--alert);pointer-events:none}
+.rv-ctrl{display:flex;justify-content:center;gap:16px}
 </style>
 </head>
 <body>
@@ -291,6 +314,11 @@ body.night #welcome{background:radial-gradient(130% 90% at 50% 0%,#200d08 0%,#14
 
   <button class="ibtn" id="torchBtn" aria-label="Фонарик">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 14H11l-1 8L19 10h-6.5L13 2z" fill="currentColor" stroke="none"/></svg>
+  </button>
+
+  <button class="ibtn" id="replayBtn" aria-label="Повторы поклёвок">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M6 2.5V6h3.5"/><path d="M10.5 9.3 15.5 12l-5 2.7V9.3z" fill="currentColor" stroke="none"/></svg>
+    <span class="badge" id="replayCount">0</span>
   </button>
 
   <div id="bottom">
@@ -389,6 +417,33 @@ body.night #welcome{background:radial-gradient(130% 90% at 50% 0%,#200d08 0%,#14
     <div class="fc-sun" id="fcSun"></div>
     <div class="fc-src">данные: Open-Meteo · автообновление каждые 30 мин</div>
   </div>
+
+  <div id="replayView">
+    <div class="rv-top">
+      <div class="t">ПОВТОР<small id="rvSub"></small></div>
+      <button class="ibtn" id="rvClose" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <canvas id="rvCanvas"></canvas>
+    <div class="rv-nav">
+      <button id="rvPrev">‹</button><span id="rvIdx">1/1</span><button id="rvNext">›</button>
+    </div>
+    <div class="rv-bar">
+      <input type="range" id="rvSeek" min="0" max="1000" value="0">
+      <div id="rvMark"></div>
+    </div>
+    <div class="rv-ctrl">
+      <button class="ibtn" id="rvPlay" aria-label="Пауза/пуск">
+        <svg id="rvIcoPause" viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z" fill="currentColor"/></svg>
+        <svg id="rvIcoPlay" viewBox="0 0 24 24" style="display:none"><path d="M8 5.5v13L19 12 8 5.5z" fill="currentColor"/></svg>
+      </button>
+      <button class="ibtn" id="rvSpeed" aria-label="Скорость"><span id="rvSpeedTxt" style="font:700 12px 'Inter',sans-serif">1×</span></button>
+      <button class="ibtn" id="rvShare" aria-label="Поделиться">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8.5 7.5 12 4l3.5 3.5"/><path d="M5 12v7a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-7"/></svg>
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -466,8 +521,8 @@ function fireEvent(type){
   statusEl.textContent={tug:'ПОКЛЁВКА!',lift:'выложило!',nibble:'потюкивает',lost:'поплавок пропал!'}[type];
   statusEl.className='status-pill bite';
   setTimeout(()=>{if(mode){statusEl.textContent='слежу…';statusEl.className='status-pill watching'}},2500);
-  if(type==='tug'){stats.bites++;screenFlash();showToast('🎣 ПОКЛЁВКА! Притопило!','var(--alert)');beep(1200,0.12,4);vibrate([200,80,200,80,400]);logEvent('поклёвка — поплавок притопило')}
-  if(type==='lift'){stats.bites++;screenFlash();showToast('⬆️ Выложило! Подсекай!','var(--alert)');beep(600,0.2,3);vibrate([300,100,300]);logEvent('подъём — поплавок выложило')}
+  if(type==='tug'){stats.bites++;screenFlash();showToast('🎣 ПОКЛЁВКА! Притопило!','var(--alert)');beep(1200,0.12,4);vibrate([200,80,200,80,400]);logEvent('поклёвка — поплавок притопило');saveReplay('tug')}
+  if(type==='lift'){stats.bites++;screenFlash();showToast('⬆️ Выложило! Подсекай!','var(--alert)');beep(600,0.2,3);vibrate([300,100,300]);logEvent('подъём — поплавок выложило');saveReplay('lift')}
   if(type==='nibble'){stats.nibbles++;showToast('👀 Потюкивает…','var(--teal)');beep(880,0.08,2);vibrate([80,60,80]);logEvent('потюкивание')}
   if(type==='lost'){showToast('❓ Потерял поплавок','var(--accent)');beep(300,0.4,1);vibrate([500]);logEvent('поплавок вне зоны — проверь удочку!')}
   updateStats();
@@ -741,10 +796,12 @@ async function startMode(m){
   sessionStart=Date.now();$('statTime').textContent='00:00';
   clearInterval(timerInt);timerInt=setInterval(tickTimer,1000);
   if(!rafId)loop();
+  repCaptureStart();
   requestWakeLock();
 }
 function stopAll(){
   mode=null;cancelAnimationFrame(rafId);rafId=null;
+  repCaptureStop();
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
   camTrack=null;torchOn=false;
   $('torchBtn').style.display='none';$('torchBtn').classList.remove('on');
@@ -971,6 +1028,160 @@ $('btnInstall').onclick=async()=>{
   deferredPrompt=null;$('btnInstall').style.display='none';
 };
 window.addEventListener('appinstalled',()=>{$('btnInstall').style.display='none'});
+
+/* =========================================================
+   ПОВТОР ПОКЛЁВКИ — кольцевой буфер кадров (8 fps, ~9 сек).
+   При поклёвке сохраняем 5.5с ДО + 2.5с ПОСЛЕ момента.
+   Просмотр: луп, замедление ½×/¼×, перемотка, шаринг клипа.
+========================================================= */
+const REPLAY_FPS=8,REPLAY_PRE=5500,REPLAY_POST=2500,REPLAY_KEEP=9000,REPLAY_MAX=6;
+let repBuf=[],repInt=null,repPending=false,replays=[];
+const repCanvas=document.createElement('canvas');
+const repCtx=repCanvas.getContext('2d');
+
+function repCaptureStart(){
+  repCaptureStop();repBuf=[];
+  repInt=setInterval(()=>{
+    const src=mode==='cam'?video:sim;
+    const w=mode==='cam'?video.videoWidth:sim.width,h=mode==='cam'?video.videoHeight:sim.height;
+    if(!w)return;
+    const k=Math.min(1,640/Math.max(w,h)); // не больше 640px по большей стороне
+    repCanvas.width=Math.round(w*k);repCanvas.height=Math.round(h*k);
+    repCtx.drawImage(src,0,0,repCanvas.width,repCanvas.height);
+    repCanvas.toBlob(b=>{
+      if(!b)return;
+      const now=Date.now();
+      repBuf.push({t:now,blob:b});
+      while(repBuf.length&&repBuf[0].t<now-REPLAY_KEEP)repBuf.shift();
+    },'image/jpeg',0.6);
+  },Math.round(1000/REPLAY_FPS));
+}
+function repCaptureStop(){clearInterval(repInt);repInt=null}
+
+function saveReplay(type){
+  if(repPending)return;
+  repPending=true;
+  const eventT=Date.now();
+  setTimeout(()=>{
+    repPending=false;
+    const frames=repBuf.filter(f=>f.t>=eventT-REPLAY_PRE&&f.t<=eventT+REPLAY_POST);
+    if(frames.length<REPLAY_FPS)return; // мало кадров — пропускаем
+    replays.push({frames:frames.slice(),eventT,
+      label:(type==='tug'?'Притопило':'Выложило')+' · '+fmtHM(new Date())});
+    if(replays.length>REPLAY_MAX)replays.shift();
+    $('replayCount').textContent=replays.length;
+    $('replayBtn').style.display='flex';
+    showToast('🎬 Повтор сохранён');
+    logEvent('повтор поклёвки записан ('+frames.length+' кадров)');
+  },REPLAY_POST+300);
+}
+
+/* ---------- плеер повторов ---------- */
+const rv={idx:0,t:0,playing:true,speed:1,raf:null,last:0,frame:-1,busy:false,seeking:false};
+function rvCur(){return replays[rv.idx]}
+function rvDur(){const f=rvCur().frames;return (f[f.length-1].t-f[0].t)||1}
+function rvSyncUi(){
+  const R=rvCur();
+  $('rvSub').textContent=R.label;
+  $('rvIdx').textContent=(rv.idx+1)+'/'+replays.length;
+  $('rvPrev').disabled=rv.idx===0;
+  $('rvNext').disabled=rv.idx===replays.length-1;
+  const pct=(R.eventT-R.frames[0].t)/rvDur();
+  $('rvMark').style.left=Math.min(100,Math.max(0,pct*100))+'%';
+  $('rvIcoPause').style.display=rv.playing?'block':'none';
+  $('rvIcoPlay').style.display=rv.playing?'none':'block';
+}
+function rvLoop(ts){
+  rv.raf=requestAnimationFrame(rvLoop);
+  if(!rv.last)rv.last=ts;
+  const dt=ts-rv.last;rv.last=ts;
+  if(rv.playing&&!rv.seeking){
+    rv.t+=dt*rv.speed;
+    if(rv.t>rvDur())rv.t=0; // луп
+    $('rvSeek').value=Math.round(rv.t/rvDur()*1000);
+  }
+  const F=rvCur().frames,t0=F[0].t;
+  let i=F.length-1;
+  for(let k=0;k<F.length;k++){if(F[k].t-t0>rv.t){i=Math.max(0,k-1);break}}
+  if(i!==rv.frame&&!rv.busy){
+    rv.busy=true;
+    createImageBitmap(F[i].blob).then(bmp=>{
+      const c=$('rvCanvas');
+      if(c.width!==bmp.width){c.width=bmp.width;c.height=bmp.height}
+      c.getContext('2d').drawImage(bmp,0,0);
+      rv.frame=i;bmp.close();rv.busy=false;
+    }).catch(()=>{rv.busy=false});
+  }
+}
+function rvOpen(idx){
+  if(!replays.length)return;
+  rv.idx=idx;rv.t=0;rv.playing=true;rv.speed=1;rv.frame=-1;rv.last=0;
+  $('rvSpeedTxt').textContent='1×';
+  $('replayView').classList.add('open');
+  rvSyncUi();
+  if(!rv.raf)rv.raf=requestAnimationFrame(rvLoop);
+}
+function rvHide(){
+  $('replayView').classList.remove('open');
+  cancelAnimationFrame(rv.raf);rv.raf=null;rv.last=0;
+}
+$('replayBtn').onclick=()=>rvOpen(replays.length-1);
+$('rvClose').onclick=rvHide;
+$('rvPlay').onclick=()=>{rv.playing=!rv.playing;rvSyncUi()};
+$('rvSpeed').onclick=()=>{
+  rv.speed=rv.speed===1?0.5:rv.speed===0.5?0.25:1;
+  $('rvSpeedTxt').textContent=(rv.speed===1?'1':rv.speed===0.5?'½':'¼')+'×';
+};
+$('rvPrev').onclick=()=>{if(rv.idx>0){rv.idx--;rv.t=0;rv.frame=-1;rvSyncUi()}};
+$('rvNext').onclick=()=>{if(rv.idx<replays.length-1){rv.idx++;rv.t=0;rv.frame=-1;rvSyncUi()}};
+$('rvSeek').addEventListener('input',e=>{rv.t=+e.target.value/1000*rvDur();rv.frame=-1});
+$('rvSeek').addEventListener('pointerdown',()=>rv.seeking=true);
+$('rvSeek').addEventListener('pointerup',()=>rv.seeking=false);
+
+/* ---------- экспорт клипа (WebM/MP4) и шаринг ---------- */
+let rvExporting=false;
+async function rvExport(){
+  if(rvExporting||!replays.length)return;
+  if(!('MediaRecorder' in window))return showToast('⚠️ Экспорт не поддерживается');
+  const R=rvCur();rvExporting=true;
+  showToast('🎬 Готовлю клип ~8 сек…');
+  try{
+    const first=await createImageBitmap(R.frames[0].blob);
+    const c=document.createElement('canvas');c.width=first.width;c.height=first.height;
+    const cx=c.getContext('2d');cx.drawImage(first,0,0);first.close();
+    const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':
+      MediaRecorder.isTypeSupported('video/webm')?'video/webm':
+      MediaRecorder.isTypeSupported('video/mp4')?'video/mp4':'';
+    if(!mime)throw new Error('нет кодека');
+    const rec=new MediaRecorder(c.captureStream(REPLAY_FPS),{mimeType:mime,videoBitsPerSecond:2.5e6});
+    const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+    const done=new Promise(res=>rec.onstop=res);
+    rec.start(250);
+    // проигрываем кадры в реальном времени в канвас записи
+    const t0=R.frames[0].t,start=performance.now();
+    for(const f of R.frames){
+      const wait=(f.t-t0)-(performance.now()-start);
+      if(wait>0)await new Promise(r=>setTimeout(r,wait));
+      const bmp=await createImageBitmap(f.blob);
+      cx.drawImage(bmp,0,0);bmp.close();
+    }
+    await new Promise(r=>setTimeout(r,300));
+    rec.stop();await done;
+    const ext=mime.includes('mp4')?'mp4':'webm';
+    const blob=new Blob(chunks,{type:mime});
+    const file=new File([blob],'poklevka-'+fmtHM(new Date()).replace(':','-')+'.'+ext,{type:mime});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Поклёвка! 🎣'}).catch(()=>{});
+    }else{
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);a.download=file.name;a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+      showToast('💾 Клип сохранён');
+    }
+  }catch(e){showToast('⚠️ Не удалось: '+e.message)}
+  rvExporting=false;
+}
+$('rvShare').onclick=rvExport;
 </script>
 </body>
 </html>
