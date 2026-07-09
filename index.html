@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Поплавок — ИИ-сторож поклёвки</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0B1B22">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Поплавок">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --water:#0B1B22;
+  --panel:#12262F;
+  --panel2:#0E2029;
+  --line:#1E3A45;
+  --float-orange:#FF5A1F;
+  --teal:#2FA8A0;
+  --sand:#E8F0F0;
+  --dim:#7FA0A8;
+  --alert:#FF3B3B;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--water);
+  color:var(--sand);
+  font-family:'Inter',system-ui,sans-serif;
+  overflow:hidden;
+  user-select:none;
+}
+#app{display:flex;flex-direction:column;height:100dvh}
+
+/* ---------- шапка ---------- */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--panel);border-bottom:1px solid var(--line);
+  z-index:10;
+}
+.logo{font-family:'Russo One',sans-serif;font-size:17px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.logo .bob{display:inline-block;width:10px;height:22px;border-radius:5px;
+  background:linear-gradient(180deg,var(--float-orange) 0 40%,#fff 40% 55%,#C0262D 55% 100%);
+  animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+.status-pill{
+  font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;
+  background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+  transition:all .3s;
+}
+.status-pill.watching{color:var(--teal);border-color:var(--teal)}
+.status-pill.bite{color:#fff;background:var(--alert);border-color:var(--alert);animation:pulse .5s infinite alternate}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.07)}}
+
+/* ---------- видео-сцена ---------- */
+#stage{position:relative;flex:1;background:#000;overflow:hidden}
+#video,#simCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#overlay{position:absolute;inset:0;width:100%;height:100%}
+#stage .hint{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  text-align:center;color:var(--dim);font-size:14px;line-height:1.5;
+  padding:0 30px;pointer-events:none;max-width:340px;
+}
+.hint .big{font-family:'Russo One',sans-serif;color:var(--sand);font-size:18px;margin-bottom:8px}
+
+/* лента событий поверх видео */
+#toast{
+  position:absolute;top:12px;left:50%;transform:translate(-50%,-20px);
+  background:rgba(11,27,34,.92);border:1px solid var(--float-orange);
+  color:var(--sand);font-weight:600;font-size:14px;
+  padding:8px 18px;border-radius:12px;opacity:0;transition:all .25s;
+  pointer-events:none;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- сейсмограф поклёвки (фирменный элемент) ---------- */
+#trace-wrap{
+  background:var(--panel2);border-top:1px solid var(--line);
+  padding:6px 14px 2px;position:relative;
+}
+#trace-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between}
+#trace{width:100%;height:56px;display:block}
+
+/* ---------- панель управления ---------- */
+#controls{
+  background:var(--panel);padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);
+}
+.row{display:flex;gap:10px}
+button{
+  flex:1;font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:.4px;
+  padding:14px 10px;border-radius:14px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--sand);cursor:pointer;transition:all .15s;
+}
+button:active{transform:scale(.97)}
+button.primary{background:var(--float-orange);border-color:var(--float-orange);color:#fff}
+button.stop{background:transparent;border-color:var(--alert);color:var(--alert)}
+button:disabled{opacity:.35;pointer-events:none}
+.mini-row{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--dim)}
+.chip{
+  flex:1;text-align:center;padding:8px 4px;border-radius:10px;background:var(--panel2);
+  border:1px solid var(--line);font-size:12px;font-weight:600;cursor:pointer;color:var(--dim);
+  font-family:'Inter',sans-serif;
+}
+.chip.on{color:var(--float-orange);border-color:var(--float-orange)}
+
+/* чувствительность */
+.sens{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim)}
+.sens input{flex:1;accent-color:var(--float-orange)}
+
+/* журнал */
+#log{
+  max-height:0;overflow:hidden;transition:max-height .3s;
+  font-size:12px;color:var(--dim);
+}
+#log.open{max-height:120px;overflow-y:auto}
+#log div{padding:3px 0;border-bottom:1px dashed var(--line)}
+#log b{color:var(--sand)}
+
+/* кнопка установки PWA */
+#btnInstall{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo"><span class="bob"></span>ПОПЛАВОК</div>
+    <div class="status-pill" id="status">не активен</div>
+  </header>
+
+  <div id="stage">
+    <video id="video" autoplay playsinline muted style="display:none"></video>
+    <canvas id="simCanvas" style="display:none"></canvas>
+    <canvas id="overlay"></canvas>
+    <div class="hint" id="hint">
+      <div class="big">Ассаляму алейкум, рыбак! 🎣</div>
+      Включи камеру и наведи на поплавок,<br>или попробуй демо-режим на диване.
+    </div>
+    <div id="toast"></div>
+  </div>
+
+  <div id="trace-wrap">
+    <div id="trace-label"><span>Сейсмограф поклёвки</span><span id="calib-label"></span></div>
+    <canvas id="trace"></canvas>
+  </div>
+
+  <div id="controls">
+    <div class="row">
+      <button class="primary" id="btnCam">📷 Камера</button>
+      <button id="btnDemo">🛋️ Демо</button>
+      <button class="stop" id="btnStop" disabled>Стоп</button>
+    </div>
+    <div class="row">
+      <div class="chip on" id="chipSound">🔊 Звук</div>
+      <div class="chip on" id="chipVibro">📳 Вибро</div>
+      <div class="chip" id="chipLog">📜 Журнал</div>
+    </div>
+    <div class="sens">
+      Чувствительность
+      <input type="range" id="sens" min="1" max="10" value="5">
+      <span id="sensVal">5</span>
+    </div>
+    <div class="row">
+      <button id="btnInstall">⬇️ Установить на телефон</button>
+    </div>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   ПОПЛАВОК — ИИ-сторож поклёвки
+   Трекинг: пользователь тапает по поплавку → фиксируем ROI,
+   следим за вертикальным центром масс яркости/цвета.
+   Калибровка 8 сек → baseline волнения → детект аномалий.
+========================================================= */
+const $=id=>document.getElementById(id);
+const video=$('video'),sim=$('simCanvas'),overlay=$('overlay'),trace=$('trace');
+const octx=overlay.getContext('2d'),tctx=trace.getContext('2d');
+const statusEl=$('status'),hint=$('hint'),toast=$('toast');
+
+let mode=null;            // 'cam' | 'demo'
+let stream=null,rafId=null;
+let roi=null;             // {x,y,w,h} в координатах кадра
+let baselineY=null;       // опорная вертикаль поплавка
+let calibUntil=0;         // конец калибровки
+let noiseStd=1;           // фоновый шум (волны)
+let history=[];           // след смещений для графика
+let lastEventT=0;
+let soundOn=true,vibroOn=true;
+let sens=5;
+let procCanvas=document.createElement('canvas');
+let pctx=procCanvas.getContext('2d',{willReadFrequently:true});
+let wakeLock=null;
+
+/* ---------- аудио ---------- */
+let actx=null;
+function beep(freq=880,dur=0.15,times=1){
+  if(!soundOn)return;
+  if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();
+  for(let i=0;i<times;i++){
+    const t=actx.currentTime+i*(dur+0.08);
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.frequency.value=freq;o.type='square';
+    g.gain.setValueAtTime(0.001,t);
+    g.gain.exponentialRampToValueAtTime(0.4,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g).connect(actx.destination);o.start(t);o.stop(t+dur+0.02);
+  }
+}
+function vibrate(pat){if(vibroOn&&navigator.vibrate)navigator.vibrate(pat)}
+
+/* ---------- события ---------- */
+function showToast(msg,color){
+  toast.textContent=msg;toast.style.borderColor=color||'var(--float-orange)';
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>toast.classList.remove('show'),2200);
+}
+function logEvent(msg){
+  const d=new Date(),hh=String(d.getHours()).padStart(2,'0'),mm=String(d.getMinutes()).padStart(2,'0'),ss=String(d.getSeconds()).padStart(2,'0');
+  const el=document.createElement('div');
+  el.innerHTML=`<b>${hh}:${mm}:${ss}</b> — ${msg}`;
+  $('log').prepend(el);
+}
+function fireEvent(type){
+  const now=performance.now();
+  if(now-lastEventT<1500)return; // антидребезг
+  lastEventT=now;
+  statusEl.textContent={tug:'ПОКЛЁВКА!',lift:'выложило!',nibble:'потюкивает',lost:'поплавок пропал!'}[type];
+  statusEl.className='status-pill bite';
+  setTimeout(()=>{if(mode){statusEl.textContent='слежу…';statusEl.className='status-pill watching'}},2500);
+  if(type==='tug'){showToast('🎣 ПОКЛЁВКА! Притопило!','var(--alert)');beep(1200,0.12,4);vibrate([200,80,200,80,400]);logEvent('поклёвка — поплавок притопило')}
+  if(type==='lift'){showToast('⬆️ Выложило! Подсекай!','var(--alert)');beep(600,0.2,3);vibrate([300,100,300]);logEvent('подъём — поплавок выложило')}
+  if(type==='nibble'){showToast('👀 Потюкивает…','var(--teal)');beep(880,0.08,2);vibrate([80,60,80]);logEvent('потюкивание')}
+  if(type==='lost'){showToast('❓ Потерял поплавок','var(--float-orange)');beep(300,0.4,1);vibrate([500]);logEvent('поплавок вне зоны — проверь удочку!')}
+}
+
+/* ---------- обработка кадра ---------- */
+function frameSize(){
+  if(mode==='cam')return{w:video.videoWidth,h:video.videoHeight};
+  return{w:sim.width,h:sim.height};
+}
+function grabROI(){
+  const{w,h}=frameSize();if(!w)return null;
+  procCanvas.width=roi.w;procCanvas.height=roi.h;
+  pctx.drawImage(mode==='cam'?video:sim,roi.x,roi.y,roi.w,roi.h,0,0,roi.w,roi.h);
+  return pctx.getImageData(0,0,roi.w,roi.h);
+}
+/* центр масс "поплавочности": яркие + красно-оранжевые пиксели */
+function floatCenterY(img){
+  const d=img.data;let sum=0,wsum=0;
+  for(let y=0;y<img.height;y++){
+    let rowW=0;
+    for(let x=0;x<img.width;x++){
+      const i=(y*img.width+x)*4;
+      const r=d[i],g=d[i+1],b=d[i+2];
+      const lum=0.3*r+0.59*g+0.11*b;
+      const redness=Math.max(0,r-(g+b)/2);       // оранжевая антенна
+      const score=redness*2+Math.max(0,lum-140); // ярко ИЛИ красно
+      rowW+=score;
+    }
+    sum+=rowW*y;wsum+=rowW;
+  }
+  if(wsum<500)return null; // ничего похожего на поплавок
+  return sum/wsum;
+}
+
+/* ---------- главный цикл ---------- */
+function loop(){
+  rafId=requestAnimationFrame(loop);
+  const{w,h}=frameSize();if(!w)return;
+  if(mode==='demo')drawSim();
+
+  // оверлей
+  overlay.width=overlay.clientWidth;overlay.height=overlay.clientHeight;
+  const sx=overlay.width/w,sy=overlay.height/h;
+
+  if(!roi){return}
+  const img=grabROI();if(!img)return;
+  const cy=floatCenterY(img);
+  const now=performance.now();
+
+  let dev=0;
+  if(cy===null){
+    if(baselineY!==null&&now>calibUntil)fireEvent('lost');
+  }else{
+    const absY=roi.y+cy;
+    if(baselineY===null){baselineY=absY;calibUntil=now+8000;statusEl.textContent='калибровка…';statusEl.className='status-pill watching'}
+    // медленная адаптация к дрейфу (течение, ветер)
+    if(now>calibUntil)baselineY+=(absY-baselineY)*0.002;
+    else baselineY+=(absY-baselineY)*0.02;
+    dev=absY-baselineY;
+
+    // оценка шума волн во время калибровки
+    if(now<calibUntil){
+      noiseStd=noiseStd*0.95+Math.abs(dev)*0.05;
+      $('calib-label').textContent='калибровка '+Math.ceil((calibUntil-now)/1000)+' с';
+    }else{
+      $('calib-label').textContent='фон волн ±'+noiseStd.toFixed(1)+'px';
+      const k=(11-sens);                 // порог из чувствительности
+      const thr=Math.max(3,noiseStd*k);  // адаптивный порог
+      if(dev>thr*1.6)fireEvent('tug');        // резко вниз = притопило
+      else if(dev<-thr*1.6)fireEvent('lift'); // вверх = выложило
+      else{
+        // потюкивание: высокочастотные колебания выше фона
+        const recent=history.slice(-20);
+        if(recent.length>15){
+          const osc=recent.reduce((a,v,i)=>i?a+Math.abs(v-recent[i-1]):0,0)/recent.length;
+          if(osc>Math.max(1.2,noiseStd*(k*0.45)))fireEvent('nibble');
+        }
+      }
+    }
+  }
+  history.push(dev);if(history.length>240)history.shift();
+
+  // рисуем рамку и маркер
+  octx.strokeStyle='#FF5A1F';octx.lineWidth=2;
+  octx.strokeRect(roi.x*sx,roi.y*sy,roi.w*sx,roi.h*sy);
+  if(cy!==null){
+    octx.beginPath();
+    octx.arc((roi.x+roi.w/2)*sx,(roi.y+cy)*sy,6,0,7);
+    octx.fillStyle='#FF5A1F';octx.fill();
+    octx.strokeStyle='#fff';octx.lineWidth=1.5;octx.stroke();
+  }
+  drawTrace();
+}
+
+/* ---------- сейсмограф ---------- */
+function drawTrace(){
+  trace.width=trace.clientWidth*devicePixelRatio;
+  trace.height=trace.clientHeight*devicePixelRatio;
+  const W=trace.width,H=trace.height,mid=H/2;
+  tctx.clearRect(0,0,W,H);
+  tctx.strokeStyle='#1E3A45';tctx.beginPath();tctx.moveTo(0,mid);tctx.lineTo(W,mid);tctx.stroke();
+  if(history.length<2)return;
+  const scale=Math.min(2.5,H/(noiseStd*12+8));
+  tctx.beginPath();
+  history.forEach((v,i)=>{
+    const x=i/240*W,y=mid+v*scale*devicePixelRatio;
+    i?tctx.lineTo(x,y):tctx.moveTo(x,y);
+  });
+  const last=Math.abs(history[history.length-1]);
+  tctx.strokeStyle=last>noiseStd*3?'#FF3B3B':'#2FA8A0';
+  tctx.lineWidth=1.5*devicePixelRatio;tctx.stroke();
+}
+
+/* ---------- выбор поплавка тапом ---------- */
+overlay.addEventListener('pointerdown',e=>{
+  if(!mode)return;
+  const{w,h}=frameSize();if(!w)return;
+  const r=overlay.getBoundingClientRect();
+  const fx=(e.clientX-r.left)/r.width*w;
+  const fy=(e.clientY-r.top)/r.height*h;
+  const box=Math.round(Math.min(w,h)*0.16);
+  roi={x:Math.max(0,Math.round(fx-box/2)),y:Math.max(0,Math.round(fy-box)),w:box,h:box*2};
+  roi.x=Math.min(roi.x,w-roi.w);roi.y=Math.min(roi.y,h-roi.h);
+  baselineY=null;noiseStd=1;history=[];
+  showToast('🎯 Поплавок захвачен, калибруюсь…');
+  if(actx===null)beep(880,0.05,1); // разблокировать аудио жестом
+});
+
+/* ---------- камера ---------- */
+$('btnCam').onclick=async()=>{
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}},audio:false});
+    video.srcObject=stream;video.style.display='block';sim.style.display='none';
+    await video.play();
+    startMode('cam');
+  }catch(err){
+    showToast('⚠️ Нет доступа к камере','var(--alert)');
+    logEvent('ошибка камеры: '+err.message);
+  }
+};
+
+/* ---------- демо-режим (симуляция пруда) ---------- */
+let simT=0,simBite=0,simFloatY=0;
+function drawSim(){
+  const W=sim.width=640,H=sim.height=480;
+  const c=sim.getContext('2d');
+  // вода
+  const grd=c.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,'#0F3040');grd.addColorStop(1,'#071820');
+  c.fillStyle=grd;c.fillRect(0,0,W,H);
+  simT+=0.03;
+  // рябь
+  c.strokeStyle='rgba(120,180,190,0.15)';
+  for(let i=0;i<7;i++){
+    c.beginPath();
+    for(let x=0;x<W;x+=8)c.lineTo(x,90+i*55+Math.sin(x*0.02+simT+i)*4);
+    c.stroke();
+  }
+  // сценарий поклёвок: каждые ~12-20 сек случайное событие
+  if(simBite<=0&&Math.random()<0.004){simBite=Math.random()<0.5?1:(Math.random()<0.5?2:3);simBite*=100}
+  let dy=Math.sin(simT*1.7)*2.5;                 // волны
+  if(simBite>0){
+    const phase=simBite%100;
+    const kind=Math.floor(simBite/100);
+    if(kind===1)dy+=Math.sin(phase*0.8)*4;        // потюкивание
+    if(kind===2)dy+=Math.min(40,(100-phase)*1.2); // притопило
+    if(kind===3)dy-=Math.min(30,(100-phase));     // выложило
+    simBite-=1.2;
+  }
+  simFloatY=240+dy;
+  // поплавок
+  const fx=W/2;
+  c.fillStyle='#C0262D';c.fillRect(fx-4,simFloatY,8,26);          // тело
+  c.fillStyle='#fff';c.fillRect(fx-3,simFloatY-6,6,8);            // поясок
+  c.fillStyle='#FF5A1F';c.fillRect(fx-2.5,simFloatY-26,5,22);     // антенна
+  // отражение
+  c.fillStyle='rgba(255,90,31,0.25)';c.fillRect(fx-2,simFloatY+28,4,14);
+}
+$('btnDemo').onclick=()=>{
+  video.style.display='none';sim.style.display='block';
+  drawSim();
+  startMode('demo');
+  showToast('🛋️ Демо: тапни по поплавку');
+};
+
+/* ---------- запуск/остановка ---------- */
+async function startMode(m){
+  mode=m;roi=null;baselineY=null;history=[];
+  hint.style.display='none';
+  statusEl.textContent='тапни по поплавку';
+  statusEl.className='status-pill watching';
+  $('btnStop').disabled=false;
+  if(!rafId)loop();
+  try{wakeLock=await navigator.wakeLock?.request('screen')}catch(e){}
+}
+$('btnStop').onclick=()=>{
+  mode=null;cancelAnimationFrame(rafId);rafId=null;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  video.style.display='none';sim.style.display='none';
+  roi=null;history=[];
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  tctx.clearRect(0,0,trace.width,trace.height);
+  hint.style.display='block';
+  statusEl.textContent='не активен';statusEl.className='status-pill';
+  $('btnStop').disabled=true;$('calib-label').textContent='';
+  wakeLock?.release();wakeLock=null;
+};
+
+/* ---------- настройки ---------- */
+$('chipSound').onclick=e=>{soundOn=!soundOn;e.currentTarget.classList.toggle('on',soundOn)};
+$('chipVibro').onclick=e=>{vibroOn=!vibroOn;e.currentTarget.classList.toggle('on',vibroOn)};
+$('chipLog').onclick=e=>{e.currentTarget.classList.toggle('on');$('log').classList.toggle('open')};
+$('sens').oninput=e=>{sens=+e.target.value;$('sensVal').textContent=sens};
+
+/* ---------- PWA: регистрация service worker ---------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+/* ---------- PWA: кнопка установки (Android/Chrome) ---------- */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  $('btnInstall').style.display='block';
+});
+$('btnInstall').onclick=async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;$('btnInstall').style.display='none';
+};
+window.addEventListener('appinstalled',()=>{$('btnInstall').style.display='none'});
+</script>
+</body>
+</html>
