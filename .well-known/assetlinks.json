@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.andreevartemandreevich.poplavok",
+      "sha256_cert_fingerprints": [
+        "C6:F7:06:16:B4:DD:34:CA:87:B5:AE:28:4D:7C:9D:FA:51:0A:40:D4:18:CA:53:BA:8C:93:B8:CA:4E:54:F9:D6"
+      ]
+    }
+  }
+]
