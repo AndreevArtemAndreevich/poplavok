@@ -1,6 +1,6 @@
 // Service worker для оффлайн-работы «Поплавка».
 // Меняй версию при обновлении файлов, чтобы кэш обновился.
-const CACHE = 'poplavok-v2';
+const CACHE = 'poplavok-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -23,10 +23,23 @@ self.addEventListener('activate', e => {
   );
 });
 
-// cache-first для своих ассетов, сеть для остального (шрифты и т.п.)
+// страница — network-first (обновления прилетают сразу),
+// остальное — cache-first (оффлайн на рыбалке)
 self.addEventListener('fetch', e => {
   const { request } = e;
   if (request.method !== 'GET') return;
+  if (request.mode === 'navigate') {
+    e.respondWith(
+      fetch(request)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(request, copy));
+          return res;
+        })
+        .catch(() => caches.match(request).then(hit => hit || caches.match('./index.html')))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(request).then(hit => hit || fetch(request).catch(() => hit))
   );

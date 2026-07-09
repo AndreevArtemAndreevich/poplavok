@@ -7,7 +7,7 @@
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0B1B22">
+<meta name="theme-color" content="#050F15">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,222 +18,286 @@
 <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --water:#081821;
-  --panel:rgba(18,38,47,.88);
-  --panel2:rgba(12,28,36,.9);
-  --line:#1E3A45;
-  --float-orange:#FF5A1F;
-  --orange2:#FF7A3D;
-  --teal:#2FA8A0;
-  --sand:#E8F0F0;
+  --bg:#050F15;
+  --ink:#EAF2F3;
   --dim:#7FA0A8;
+  --accent:#FF5A1F;
+  --accent2:#FF7A3D;
+  --teal:#2FA8A0;
   --alert:#FF3B3B;
+  --glass:rgba(8,21,28,.55);
+  --glass2:rgba(8,21,28,.8);
+  --stroke:rgba(255,255,255,.09);
   --glow:rgba(255,90,31,.35);
 }
-/* ночной режим — красные тона, не слепит глаза */
 body.night{
-  --panel:rgba(26,13,13,.92);
-  --panel2:rgba(20,10,10,.92);
-  --line:#3a1515;
-  --sand:#ffd7cc;
-  --dim:#b07060;
+  --ink:#ffd9cd;
+  --dim:#b07260;
+  --accent:#ff4e2a;
   --teal:#cc5540;
-  --glow:rgba(255,60,30,.25);
+  --glass:rgba(24,8,5,.6);
+  --glass2:rgba(24,8,5,.85);
+  --stroke:rgba(255,120,80,.14);
+  --glow:rgba(255,60,30,.3);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{
-  background:radial-gradient(120% 80% at 50% 0%,#0F2C38 0%,#081821 55%,#050F15 100%);
-  color:var(--sand);
+  background:radial-gradient(130% 90% at 50% 0%,#0E2833 0%,#081821 55%,#040B10 100%);
+  color:var(--ink);
   font-family:'Inter',system-ui,sans-serif;
-  overflow:hidden;
-  user-select:none;
+  overflow:hidden;user-select:none;
 }
-body.night{background:radial-gradient(120% 80% at 50% 0%,#1c0d0a 0%,#120806 55%,#0a0404 100%)}
-#app{display:flex;flex-direction:column;height:100dvh}
+body.night{background:radial-gradient(130% 90% at 50% 0%,#200d08 0%,#140806 55%,#0a0403 100%)}
 
-/* ---------- шапка ---------- */
-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
-  background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--line);z-index:10;
-}
-.logo{font-family:'Russo One',sans-serif;font-size:17px;letter-spacing:.8px;display:flex;align-items:center;gap:9px;
-  text-shadow:0 0 24px var(--glow)}
-.logo .bob{display:inline-block;width:10px;height:24px;border-radius:5px;
-  background:linear-gradient(180deg,var(--float-orange) 0 40%,#fff 40% 55%,#C0262D 55% 100%);
-  box-shadow:0 0 12px var(--glow);
-  animation:bob 2.6s ease-in-out infinite}
-@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(3px) rotate(2deg)}}
-.status-pill{
-  font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px;
-  background:var(--panel2);border:1px solid var(--line);color:var(--dim);
-  transition:all .3s;
-}
-.status-pill.watching{color:var(--teal);border-color:var(--teal);box-shadow:0 0 14px rgba(47,168,160,.25)}
-.status-pill.bite{color:#fff;background:var(--alert);border-color:var(--alert);
-  box-shadow:0 0 20px rgba(255,59,59,.6);animation:pulse .5s infinite alternate}
-@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.08)}}
-
-/* ---------- видео-сцена ---------- */
-#stage{position:relative;flex:1;background:#000;overflow:hidden}
+#app{position:fixed;inset:0}
+#stage{position:absolute;inset:0}
 #video,#simCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #overlay{position:absolute;inset:0;width:100%;height:100%}
 #flash{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .12s;
   box-shadow:inset 0 0 140px 40px rgba(255,59,59,.6);z-index:5}
 #flash.show{opacity:1}
 
-/* приветственный экран */
-#stage .hint{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  text-align:center;color:var(--dim);font-size:14px;line-height:1.6;
-  padding:0 30px;pointer-events:none;max-width:340px;
+/* ================= верхняя панель ================= */
+#topbar{
+  position:absolute;top:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(12px + env(safe-area-inset-top)) 18px 26px;
+  background:linear-gradient(180deg,rgba(4,11,16,.8) 0%,rgba(4,11,16,.35) 60%,transparent 100%);
+  pointer-events:none;
 }
-.hint .float-big{width:16px;height:46px;border-radius:8px;margin:0 auto;position:relative;
-  background:linear-gradient(180deg,var(--float-orange) 0 40%,#fff 40% 55%,#C0262D 55% 100%);
-  box-shadow:0 0 30px var(--glow);
+.brand{font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:2.5px;
+  display:flex;align-items:center;gap:8px;color:var(--ink);opacity:.95}
+.brand .bob{display:inline-block;width:7px;height:18px;border-radius:4px;
+  background:linear-gradient(180deg,var(--accent) 0 40%,#fff 40% 55%,#C0262D 55% 100%);
+  box-shadow:0 0 10px var(--glow);
   animation:bob 2.6s ease-in-out infinite}
-.hint .ripple{width:70px;height:14px;margin:-4px auto 16px;border-radius:50%;
-  border:2px solid rgba(47,168,160,.45);animation:rip 2.6s ease-out infinite}
-@keyframes rip{0%{transform:scale(.35);opacity:.9}100%{transform:scale(1.7);opacity:0}}
-.hint .big{font-family:'Russo One',sans-serif;color:var(--sand);font-size:19px;margin-bottom:8px;
-  text-shadow:0 0 30px var(--glow)}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(3px) rotate(2deg)}}
+.status-pill{
+  font-size:11px;font-weight:600;letter-spacing:.4px;padding:6px 13px;border-radius:99px;
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--stroke);color:var(--dim);transition:all .3s;
+}
+.status-pill.watching{color:var(--teal);border-color:rgba(47,168,160,.4)}
+.status-pill.bite{color:#fff;background:var(--alert);border-color:var(--alert);
+  box-shadow:0 0 20px rgba(255,59,59,.6);animation:pulse .5s infinite alternate}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.08)}}
 
-/* тост поверх видео */
+/* фонарик — плавающая кнопка справа */
+#torchBtn{position:absolute;right:14px;top:calc(74px + env(safe-area-inset-top));z-index:11;display:none}
+
+/* ================= экран-приветствие ================= */
+#welcome{
+  position:absolute;inset:0;z-index:15;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;text-align:center;padding:0 34px;
+  background:radial-gradient(130% 90% at 50% 0%,#0E2833 0%,#081821 55%,#040B10 100%);
+  transition:opacity .35s;
+}
+body.night #welcome{background:radial-gradient(130% 90% at 50% 0%,#200d08 0%,#140806 55%,#0a0403 100%)}
+#welcome.hide{opacity:0;pointer-events:none}
+#welcome .float-big{width:14px;height:42px;border-radius:7px;position:relative;
+  background:linear-gradient(180deg,var(--accent) 0 40%,#fff 40% 55%,#C0262D 55% 100%);
+  box-shadow:0 0 34px var(--glow);
+  animation:bob 2.6s ease-in-out infinite}
+#welcome .ripple{width:64px;height:13px;margin-top:-3px;border-radius:50%;
+  border:2px solid rgba(47,168,160,.4);animation:rip 2.6s ease-out infinite}
+@keyframes rip{0%{transform:scale(.35);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+#welcome h1{font-family:'Russo One',sans-serif;font-size:24px;letter-spacing:3px;margin-top:14px;
+  text-shadow:0 0 34px var(--glow)}
+#welcomeMsg{color:var(--dim);font-size:13.5px;line-height:1.65;margin-top:6px;max-width:320px}
+#welcomeMsg b{color:var(--ink);font-weight:600}
+#btnStartCam{
+  margin-top:26px;width:min(300px,80vw);padding:16px;border:none;border-radius:18px;
+  font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:1px;color:#fff;cursor:pointer;
+  background:linear-gradient(145deg,var(--accent2),#FF4E11);
+  box-shadow:0 10px 34px var(--glow),inset 0 1px 0 rgba(255,255,255,.3);
+  transition:transform .15s;
+}
+#btnStartCam:active{transform:scale(.97)}
+#btnDemoWelcome{
+  margin-top:12px;background:none;border:none;color:var(--dim);font-size:13px;
+  font-family:'Inter',sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:4px;
+}
+
+/* ================= нижний блок ================= */
+#bottom{
+  position:absolute;left:0;right:0;bottom:0;z-index:10;
+  display:flex;flex-direction:column;gap:12px;
+  padding:26px 14px calc(16px + env(safe-area-inset-bottom));
+  background:linear-gradient(0deg,rgba(4,11,16,.85) 0%,rgba(4,11,16,.4) 65%,transparent 100%);
+}
+
+/* сейсмограф-карточка */
+#tracecard{
+  border-radius:18px;padding:9px 14px 5px;
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--stroke);
+}
+#trace-head{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:9.5px;letter-spacing:1.8px;text-transform:uppercase;color:var(--dim)}
+#trace-stats{letter-spacing:.5px;text-transform:none;font-size:11px;font-weight:600;color:var(--ink)}
+#trace-stats b{color:var(--accent);font-weight:700}
+#trace{width:100%;height:48px;display:block}
+
+/* док с кнопками */
+#dock{display:flex;align-items:center;justify-content:space-between;padding:0 10px}
+.ibtn{
+  width:50px;height:50px;border-radius:50%;border:1px solid var(--stroke);
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:var(--dim);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;
+}
+.ibtn:active{transform:scale(.92)}
+.ibtn.on{color:var(--accent);border-color:rgba(255,90,31,.45);box-shadow:0 0 16px var(--glow)}
+.ibtn svg{width:22px;height:22px}
+#btnMain{
+  width:72px;height:72px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  background:linear-gradient(145deg,var(--accent2),#FF4E11);
+  box-shadow:0 8px 30px var(--glow),inset 0 1px 0 rgba(255,255,255,.3);
+  transition:all .2s;
+}
+#btnMain:active{transform:scale(.94)}
+#btnMain svg{width:30px;height:30px}
+#btnMain.active{
+  background:rgba(20,8,8,.6);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:2px solid var(--alert);color:var(--alert);
+  box-shadow:0 0 22px rgba(255,59,59,.35);
+}
+
+/* ================= шторка настроек ================= */
+#scrim{position:absolute;inset:0;z-index:19;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .3s}
+#scrim.open{opacity:1;pointer-events:auto}
+#sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;
+  background:var(--glass2);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-radius:26px 26px 0 0;border-top:1px solid var(--stroke);
+  padding:10px 22px calc(24px + env(safe-area-inset-bottom));
+  transform:translateY(110%);transition:transform .32s cubic-bezier(.32,.72,.35,1);
+}
+#sheet.open{transform:none}
+#sheet .handle{width:38px;height:4px;border-radius:2px;background:var(--stroke);margin:4px auto 18px}
+#sheet h2{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:var(--dim);
+  text-transform:uppercase;margin-bottom:16px}
+.srow{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:500;color:var(--ink);margin-bottom:16px}
+.srow label{width:120px;color:var(--dim)}
+.srow input[type=range]{flex:1;accent-color:var(--accent)}
+.srow .val{width:34px;text-align:right;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.sheet-btns{display:flex;gap:10px;margin-top:4px}
+.sbtn{
+  flex:1;padding:13px;border-radius:14px;border:1px solid var(--stroke);
+  background:rgba(255,255,255,.04);color:var(--ink);font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.sbtn:active{transform:scale(.97)}
+.sbtn.accent{background:linear-gradient(145deg,var(--accent2),#FF4E11);border-color:transparent;color:#fff}
+#zoomRow{display:none}
+#btnInstall{display:none;margin-top:10px;width:100%}
+#log{max-height:0;overflow:hidden;transition:max-height .3s;font-size:12px;color:var(--dim);margin-top:8px}
+#log.open{max-height:130px;overflow-y:auto}
+#log div{padding:4px 0;border-bottom:1px dashed var(--stroke)}
+#log b{color:var(--ink)}
+
+/* тост */
 #toast{
-  position:absolute;top:14px;left:50%;transform:translate(-50%,-24px);
-  background:rgba(11,27,34,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1px solid var(--float-orange);
-  color:var(--sand);font-weight:600;font-size:14px;
-  padding:9px 20px;border-radius:14px;opacity:0;transition:all .25s;
-  pointer-events:none;white-space:nowrap;z-index:6;
-  box-shadow:0 6px 24px rgba(0,0,0,.4);
+  position:absolute;top:calc(76px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-16px);
+  background:var(--glass2);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--accent);color:var(--ink);font-weight:600;font-size:13.5px;
+  padding:10px 20px;border-radius:14px;opacity:0;transition:all .25s;
+  pointer-events:none;white-space:nowrap;z-index:12;box-shadow:0 8px 26px rgba(0,0,0,.45);
 }
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
-/* статистика сессии поверх видео */
-#stats{
-  position:absolute;bottom:12px;left:0;right:0;display:none;
-  justify-content:center;gap:8px;pointer-events:none;z-index:4;
+/* подсказка «тапни по поплавку» */
+#tapHint{
+  position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:8;
+  display:none;flex-direction:column;align-items:center;gap:10px;pointer-events:none;
 }
-.stat{
-  background:rgba(8,24,33,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1px solid var(--line);border-radius:12px;
-  padding:6px 13px;font-size:12px;font-weight:600;color:var(--sand);
-}
-.stat b{color:var(--float-orange)}
-
-/* ---------- сейсмограф ---------- */
-#trace-wrap{
-  background:var(--panel2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border-top:1px solid var(--line);
-  padding:7px 16px 2px;position:relative;
-}
-#trace-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between}
-#trace{width:100%;height:56px;display:block}
-
-/* ---------- панель управления ---------- */
-#controls{
-  background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
-  display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);
-}
-.row{display:flex;gap:10px}
-button{
-  flex:1;font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:.4px;
-  padding:14px 10px;border-radius:16px;border:1px solid var(--line);
-  background:var(--panel2);color:var(--sand);cursor:pointer;transition:all .15s;
-}
-button:active{transform:scale(.96)}
-button.primary{
-  background:linear-gradient(135deg,var(--orange2),var(--float-orange));
-  border-color:transparent;color:#fff;
-  box-shadow:0 4px 22px var(--glow);
-}
-button.stop{background:transparent;border-color:var(--alert);color:var(--alert)}
-button:disabled{opacity:.35;pointer-events:none;box-shadow:none}
-.chip{
-  flex:1;text-align:center;padding:9px 4px;border-radius:12px;background:var(--panel2);
-  border:1px solid var(--line);font-size:11.5px;font-weight:600;cursor:pointer;color:var(--dim);
-  font-family:'Inter',sans-serif;transition:all .2s;
-}
-.chip.on{color:var(--float-orange);border-color:var(--float-orange);box-shadow:0 0 12px var(--glow)}
-
-/* слайдеры */
-.sens{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim)}
-.sens input{flex:1;accent-color:var(--float-orange)}
-#zoomRow{display:none}
-
-/* журнал */
-#log{
-  max-height:0;overflow:hidden;transition:max-height .3s;
-  font-size:12px;color:var(--dim);
-}
-#log.open{max-height:120px;overflow-y:auto}
-#log div{padding:3px 0;border-bottom:1px dashed var(--line)}
-#log b{color:var(--sand)}
-
-#btnInstall{display:none;font-size:13px;padding:11px 10px}
+#tapHint .ring{width:58px;height:58px;border-radius:50%;border:2px solid rgba(255,90,31,.8);
+  animation:ringPulse 1.6s ease-out infinite}
+@keyframes ringPulse{0%{transform:scale(.55);opacity:1}100%{transform:scale(1.35);opacity:0}}
+#tapHint span{font-size:13px;font-weight:600;color:var(--ink);
+  background:var(--glass2);border:1px solid var(--stroke);border-radius:12px;padding:8px 16px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 </style>
 </head>
 <body>
 <div id="app">
-  <header>
-    <div class="logo"><span class="bob"></span>ПОПЛАВОК</div>
-    <div class="status-pill" id="status">не активен</div>
-  </header>
-
   <div id="stage">
     <video id="video" autoplay playsinline muted style="display:none"></video>
     <canvas id="simCanvas" style="display:none"></canvas>
     <canvas id="overlay"></canvas>
     <div id="flash"></div>
-    <div class="hint" id="hint">
-      <div class="float-big"></div>
-      <div class="ripple"></div>
-      <div class="big">Ассаляму алейкум, рыбак! 🎣</div>
-      Включи камеру и наведи на поплавок,<br>или попробуй демо-режим на диване.
-    </div>
+    <div id="tapHint"><div class="ring"></div><span>Тапни по поплавку</span></div>
     <div id="toast"></div>
-    <div id="stats">
-      <div class="stat">🎣 <b id="statBites">0</b></div>
-      <div class="stat">👀 <b id="statNibbles">0</b></div>
-      <div class="stat">⏱ <b id="statTime">00:00</b></div>
+  </div>
+
+  <div id="topbar">
+    <div class="brand"><span class="bob"></span>ПОПЛАВОК</div>
+    <div class="status-pill" id="status">не активен</div>
+  </div>
+
+  <button class="ibtn" id="torchBtn" aria-label="Фонарик">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 14H11l-1 8L19 10h-6.5L13 2z" fill="currentColor" stroke="none"/></svg>
+  </button>
+
+  <div id="bottom">
+    <div id="tracecard">
+      <div id="trace-head">
+        <span>Сейсмограф <span id="calib-label"></span></span>
+        <span id="trace-stats">клёв <b id="statBites">0</b> · тычки <b id="statNibbles">0</b> · <span id="statTime">00:00</span></span>
+      </div>
+      <canvas id="trace"></canvas>
+    </div>
+    <div id="dock">
+      <button class="ibtn on" id="chipSound" aria-label="Звук">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 8.5H3.5v7h3L11 19V5z" fill="currentColor" stroke="none"/><path d="M15.5 8.7a4.6 4.6 0 0 1 0 6.6M18.2 6a8.4 8.4 0 0 1 0 12"/></svg>
+      </button>
+      <button class="ibtn on" id="chipVibro" aria-label="Вибро">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="16" rx="2.2"/><path d="M4.5 9v6M19.5 9v6"/></svg>
+      </button>
+      <button id="btnMain" aria-label="Камера">
+        <svg id="icoCam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8L10 4h4l1.7 2h1.8A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8z"/><circle cx="12" cy="12.4" r="3.4"/></svg>
+        <svg id="icoStop" viewBox="0 0 24 24" style="display:none"><rect x="7" y="7" width="10" height="10" rx="2.5" fill="currentColor"/></svg>
+      </button>
+      <button class="ibtn" id="chipNight" aria-label="Ночной режим">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.2A8.2 8.2 0 1 1 10.8 4a6.6 6.6 0 0 0 9.2 9.2z"/></svg>
+      </button>
+      <button class="ibtn" id="btnGear" aria-label="Настройки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9.5" cy="7" r="2.3" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.3" fill="currentColor" stroke="none"/><circle cx="7.5" cy="17" r="2.3" fill="currentColor" stroke="none"/></svg>
+      </button>
     </div>
   </div>
 
-  <div id="trace-wrap">
-    <div id="trace-label"><span>Сейсмограф поклёвки</span><span id="calib-label"></span></div>
-    <canvas id="trace"></canvas>
+  <div id="welcome">
+    <div class="float-big"></div>
+    <div class="ripple"></div>
+    <h1>ПОПЛАВОК</h1>
+    <div id="welcomeMsg">ИИ-сторож поклёвки. Наведи камеру на поплавок, тапни по нему — дальше слежу я.</div>
+    <button id="btnStartCam">Включить камеру</button>
+    <button id="btnDemoWelcome">попробовать демо-режим</button>
   </div>
 
-  <div id="controls">
-    <div class="row">
-      <button class="primary" id="btnCam">📷 Камера</button>
-      <button id="btnDemo">🛋️ Демо</button>
-      <button class="stop" id="btnStop" disabled>Стоп</button>
-    </div>
-    <div class="row">
-      <div class="chip on" id="chipSound">🔊 Звук</div>
-      <div class="chip on" id="chipVibro">📳 Вибро</div>
-      <div class="chip" id="chipNight">🌙 Ночь</div>
-      <div class="chip" id="chipTorch" style="display:none">🔦 Свет</div>
-      <div class="chip" id="chipLog">📜 Лог</div>
-    </div>
-    <div class="sens" id="zoomRow">
-      🔍 Зум
-      <input type="range" id="zoom" min="1" max="5" step="0.1" value="1">
-      <span id="zoomVal">1×</span>
-    </div>
-    <div class="sens">
-      Чувствительность
+  <div id="scrim"></div>
+  <div id="sheet">
+    <div class="handle"></div>
+    <h2>Настройки</h2>
+    <div class="srow">
+      <label>Чувствительность</label>
       <input type="range" id="sens" min="1" max="10" value="5">
-      <span id="sensVal">5</span>
+      <span class="val" id="sensVal">5</span>
     </div>
-    <div class="row">
-      <button id="btnInstall">⬇️ Установить на телефон</button>
+    <div class="srow" id="zoomRow">
+      <label>Зум камеры</label>
+      <input type="range" id="zoom" min="1" max="5" step="0.1" value="1">
+      <span class="val" id="zoomVal">1×</span>
     </div>
+    <div class="sheet-btns">
+      <button class="sbtn" id="btnDemo">Демо-режим</button>
+      <button class="sbtn" id="chipLog">Журнал событий</button>
+    </div>
+    <button class="sbtn accent" id="btnInstall">Установить на телефон</button>
     <div id="log"></div>
   </div>
 </div>
@@ -241,24 +305,23 @@ button:disabled{opacity:.35;pointer-events:none;box-shadow:none}
 <script>
 /* =========================================================
    ПОПЛАВОК — ИИ-сторож поклёвки
-   Трекинг: пользователь тапает по поплавку → фиксируем ROI,
-   следим за вертикальным центром масс яркости/цвета.
-   Калибровка 8 сек → baseline волнения → детект аномалий.
+   Трекинг: тап по поплавку → ROI, следим за вертикальным
+   центром масс яркости/цвета. Калибровка 8с → детект аномалий.
 ========================================================= */
 const $=id=>document.getElementById(id);
 const video=$('video'),sim=$('simCanvas'),overlay=$('overlay'),trace=$('trace');
 const octx=overlay.getContext('2d'),tctx=trace.getContext('2d');
-const statusEl=$('status'),hint=$('hint'),toast=$('toast'),flash=$('flash');
+const statusEl=$('status'),toast=$('toast'),flash=$('flash'),welcome=$('welcome'),tapHint=$('tapHint');
 
 let mode=null;            // 'cam' | 'demo'
 let stream=null,rafId=null;
 let camTrack=null;        // видеотрек для зума/фонарика
 let torchOn=false;
-let roi=null;             // {x,y,w,h} в координатах кадра
-let baselineY=null;       // опорная вертикаль поплавка
-let calibUntil=0;         // конец калибровки
-let noiseStd=1;           // фоновый шум (волны)
-let history=[];           // след смещений для графика
+let roi=null;
+let baselineY=null;
+let calibUntil=0;
+let noiseStd=1;
+let history=[];
 let lastEventT=0;
 let soundOn=true,vibroOn=true;
 let sens=5;
@@ -287,7 +350,7 @@ function vibrate(pat){if(vibroOn&&navigator.vibrate)navigator.vibrate(pat)}
 
 /* ---------- события ---------- */
 function showToast(msg,color){
-  toast.textContent=msg;toast.style.borderColor=color||'var(--float-orange)';
+  toast.textContent=msg;toast.style.borderColor=color||'var(--accent)';
   toast.classList.add('show');
   clearTimeout(showToast._t);
   showToast._t=setTimeout(()=>toast.classList.remove('show'),2200);
@@ -317,7 +380,7 @@ function fireEvent(type){
   if(type==='tug'){stats.bites++;screenFlash();showToast('🎣 ПОКЛЁВКА! Притопило!','var(--alert)');beep(1200,0.12,4);vibrate([200,80,200,80,400]);logEvent('поклёвка — поплавок притопило')}
   if(type==='lift'){stats.bites++;screenFlash();showToast('⬆️ Выложило! Подсекай!','var(--alert)');beep(600,0.2,3);vibrate([300,100,300]);logEvent('подъём — поплавок выложило')}
   if(type==='nibble'){stats.nibbles++;showToast('👀 Потюкивает…','var(--teal)');beep(880,0.08,2);vibrate([80,60,80]);logEvent('потюкивание')}
-  if(type==='lost'){showToast('❓ Потерял поплавок','var(--float-orange)');beep(300,0.4,1);vibrate([500]);logEvent('поплавок вне зоны — проверь удочку!')}
+  if(type==='lost'){showToast('❓ Потерял поплавок','var(--accent)');beep(300,0.4,1);vibrate([500]);logEvent('поплавок вне зоны — проверь удочку!')}
   updateStats();
 }
 
@@ -347,7 +410,7 @@ function floatCenterY(img){
     }
     sum+=rowW*y;wsum+=rowW;
   }
-  if(wsum<500)return null; // ничего похожего на поплавок
+  if(wsum<500)return null;
   return sum/wsum;
 }
 
@@ -357,7 +420,6 @@ function loop(){
   const{w,h}=frameSize();if(!w)return;
   if(mode==='demo')drawSim();
 
-  // оверлей
   overlay.width=overlay.clientWidth;overlay.height=overlay.clientHeight;
   const sx=overlay.width/w,sy=overlay.height/h;
 
@@ -372,23 +434,20 @@ function loop(){
   }else{
     const absY=roi.y+cy;
     if(baselineY===null){baselineY=absY;calibUntil=now+8000;statusEl.textContent='калибровка…';statusEl.className='status-pill watching'}
-    // медленная адаптация к дрейфу (течение, ветер)
-    if(now>calibUntil)baselineY+=(absY-baselineY)*0.002;
+    if(now>calibUntil)baselineY+=(absY-baselineY)*0.002; // дрейф: течение, ветер
     else baselineY+=(absY-baselineY)*0.02;
     dev=absY-baselineY;
 
-    // оценка шума волн во время калибровки
     if(now<calibUntil){
       noiseStd=noiseStd*0.95+Math.abs(dev)*0.05;
-      $('calib-label').textContent='калибровка '+Math.ceil((calibUntil-now)/1000)+' с';
+      $('calib-label').textContent='· калибровка '+Math.ceil((calibUntil-now)/1000)+'с';
     }else{
-      $('calib-label').textContent='фон волн ±'+noiseStd.toFixed(1)+'px';
-      const k=(11-sens);                 // порог из чувствительности
-      const thr=Math.max(3,noiseStd*k);  // адаптивный порог
-      if(dev>thr*1.6)fireEvent('tug');        // резко вниз = притопило
-      else if(dev<-thr*1.6)fireEvent('lift'); // вверх = выложило
+      $('calib-label').textContent='· фон ±'+noiseStd.toFixed(1)+'px';
+      const k=(11-sens);
+      const thr=Math.max(3,noiseStd*k);
+      if(dev>thr*1.6)fireEvent('tug');
+      else if(dev<-thr*1.6)fireEvent('lift');
       else{
-        // потюкивание: высокочастотные колебания выше фона
         const recent=history.slice(-20);
         if(recent.length>15){
           const osc=recent.reduce((a,v,i)=>i?a+Math.abs(v-recent[i-1]):0,0)/recent.length;
@@ -399,7 +458,7 @@ function loop(){
   }
   history.push(dev);if(history.length>240)history.shift();
 
-  // рамка ROI: пунктир со свечением
+  // рамка ROI со свечением
   octx.save();
   octx.shadowColor='#FF5A1F';octx.shadowBlur=10;
   octx.strokeStyle='#FF5A1F';octx.lineWidth=2;octx.setLineDash([7,5]);
@@ -423,7 +482,7 @@ function drawTrace(){
   trace.height=trace.clientHeight*devicePixelRatio;
   const W=trace.width,H=trace.height,mid=H/2;
   tctx.clearRect(0,0,W,H);
-  tctx.strokeStyle='#1E3A45';tctx.beginPath();tctx.moveTo(0,mid);tctx.lineTo(W,mid);tctx.stroke();
+  tctx.strokeStyle='rgba(255,255,255,.08)';tctx.beginPath();tctx.moveTo(0,mid);tctx.lineTo(W,mid);tctx.stroke();
   if(history.length<2)return;
   const scale=Math.min(2.5,H/(noiseStd*12+8));
   tctx.beginPath();
@@ -431,8 +490,7 @@ function drawTrace(){
     const x=i/240*W,y=mid+v*scale*devicePixelRatio;
     i?tctx.lineTo(x,y):tctx.moveTo(x,y);
   });
-  const last=Math.abs(history[history.length-1]);
-  const hot=last>noiseStd*3;
+  const hot=Math.abs(history[history.length-1])>noiseStd*3;
   tctx.shadowColor=hot?'#FF3B3B':'#2FA8A0';
   tctx.shadowBlur=8*devicePixelRatio;
   tctx.strokeStyle=hot?'#FF3B3B':'#2FA8A0';
@@ -451,13 +509,26 @@ overlay.addEventListener('pointerdown',e=>{
   roi={x:Math.max(0,Math.round(fx-box/2)),y:Math.max(0,Math.round(fy-box)),w:box,h:box*2};
   roi.x=Math.min(roi.x,w-roi.w);roi.y=Math.min(roi.y,h-roi.h);
   baselineY=null;noiseStd=1;history=[];
+  tapHint.style.display='none';
   showToast('🎯 Поплавок захвачен, калибруюсь…');
   if(actx===null)beep(880,0.05,1); // разблокировать аудио жестом
 });
 overlay.addEventListener('contextmenu',e=>e.preventDefault());
 
 /* ---------- камера ---------- */
-$('btnCam').onclick=async()=>{
+function camBlockedHelp(){
+  showToast('🚫 Камера заблокирована','var(--alert)');
+  welcome.classList.remove('hide');
+  $('welcomeMsg').innerHTML=`Доступ к камере выключен, поэтому запрос не появляется. Включи вручную:<br><br>
+    <b>Способ 1:</b> зажми иконку «Поплавок» → «О приложении» → Разрешения → Камера → Разрешить.<br><br>
+    <b>Способ 2:</b> Chrome → ⋮ → Настройки → Настройки сайтов → Камера → разблокируй этот сайт.`;
+  logEvent('камера заблокирована в настройках устройства/браузера');
+}
+async function startCam(auto=false){
+  try{
+    const st=await navigator.permissions?.query({name:'camera'});
+    if(st?.state==='denied'){if(!auto)camBlockedHelp();return}
+  }catch(e){/* permissions API может не знать 'camera' */}
   try{
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}},audio:false});
     video.srcObject=stream;video.style.display='block';sim.style.display='none';
@@ -466,10 +537,17 @@ $('btnCam').onclick=async()=>{
     setupCamExtras();
     startMode('cam');
   }catch(err){
-    showToast('⚠️ Нет доступа к камере','var(--alert)');
-    logEvent('ошибка камеры: '+err.message);
+    if(auto)return; // тихо: покажем welcome с кнопкой
+    if(err.name==='NotAllowedError'||err.name==='SecurityError')camBlockedHelp();
+    else if(err.name==='NotFoundError')showToast('⚠️ Камера не найдена','var(--alert)');
+    else showToast('⚠️ Нет доступа к камере','var(--alert)');
+    logEvent('ошибка камеры: '+err.name+' — '+err.message);
   }
-};
+}
+$('btnStartCam').onclick=()=>startCam(false);
+
+/* автозапуск камеры при открытии приложения */
+window.addEventListener('load',()=>{setTimeout(()=>{if(!mode)startCam(true)},350)});
 
 /* зум и фонарик — если камера умеет */
 function setupCamExtras(){
@@ -481,17 +559,17 @@ function setupCamExtras(){
     $('zoomVal').textContent=(+z.value).toFixed(1)+'×';
     $('zoomRow').style.display='flex';
   }
-  if(caps.torch)$('chipTorch').style.display='block';
+  if(caps.torch)$('torchBtn').style.display='flex';
 }
 $('zoom').oninput=async e=>{
   const v=+e.target.value;
   $('zoomVal').textContent=v.toFixed(1)+'×';
   try{await camTrack.applyConstraints({advanced:[{zoom:v}]})}catch(err){}
 };
-$('chipTorch').onclick=async e=>{
+$('torchBtn').onclick=async e=>{
   torchOn=!torchOn;
   try{await camTrack.applyConstraints({advanced:[{torch:torchOn}]})}catch(err){torchOn=false}
-  e.currentTarget.classList.toggle('on',torchOn);
+  $('torchBtn').classList.toggle('on',torchOn);
 };
 
 /* ---------- демо-режим (симуляция пруда) ---------- */
@@ -499,7 +577,6 @@ let simT=0,simBite=0,simFloatY=0;
 function drawSim(){
   const W=sim.width=640,H=sim.height=480;
   const c=sim.getContext('2d');
-  // вода
   const grd=c.createLinearGradient(0,0,0,H);
   grd.addColorStop(0,'#0F3040');grd.addColorStop(1,'#071820');
   c.fillStyle=grd;c.fillRect(0,0,W,H);
@@ -517,32 +594,31 @@ function drawSim(){
     for(let x=0;x<W;x+=8)c.lineTo(x,90+i*55+Math.sin(x*0.02+simT+i)*4);
     c.stroke();
   }
-  // сценарий поклёвок: каждые ~12-20 сек случайное событие
   if(simBite<=0&&Math.random()<0.004){simBite=Math.random()<0.5?1:(Math.random()<0.5?2:3);simBite*=100}
-  let dy=Math.sin(simT*1.7)*2.5;                 // волны
+  let dy=Math.sin(simT*1.7)*2.5;
   if(simBite>0){
     const phase=simBite%100;
     const kind=Math.floor(simBite/100);
-    if(kind===1)dy+=Math.sin(phase*0.8)*4;        // потюкивание
-    if(kind===2)dy+=Math.min(40,(100-phase)*1.2); // притопило
-    if(kind===3)dy-=Math.min(30,(100-phase));     // выложило
+    if(kind===1)dy+=Math.sin(phase*0.8)*4;
+    if(kind===2)dy+=Math.min(40,(100-phase)*1.2);
+    if(kind===3)dy-=Math.min(30,(100-phase));
     simBite-=1.2;
   }
   simFloatY=240+dy;
-  // поплавок
   const fx=W/2;
-  c.fillStyle='#C0262D';c.fillRect(fx-4,simFloatY,8,26);          // тело
-  c.fillStyle='#fff';c.fillRect(fx-3,simFloatY-6,6,8);            // поясок
-  c.fillStyle='#FF5A1F';c.fillRect(fx-2.5,simFloatY-26,5,22);     // антенна
-  // отражение
+  c.fillStyle='#C0262D';c.fillRect(fx-4,simFloatY,8,26);
+  c.fillStyle='#fff';c.fillRect(fx-3,simFloatY-6,6,8);
+  c.fillStyle='#FF5A1F';c.fillRect(fx-2.5,simFloatY-26,5,22);
   c.fillStyle='rgba(255,90,31,0.25)';c.fillRect(fx-2,simFloatY+28,4,14);
 }
-$('btnDemo').onclick=()=>{
+function startDemo(){
   video.style.display='none';sim.style.display='block';
   drawSim();
   startMode('demo');
   showToast('🛋️ Демо: тапни по поплавку');
-};
+}
+$('btnDemo').onclick=()=>{closeSheet();startDemo()};
+$('btnDemoWelcome').onclick=startDemo;
 
 /* ---------- таймер сессии ---------- */
 function tickTimer(){
@@ -551,7 +627,7 @@ function tickTimer(){
   $('statTime').textContent=mm+':'+ss;
 }
 
-/* ---------- wake lock (не давать экрану гаснуть) ---------- */
+/* ---------- wake lock ---------- */
 async function requestWakeLock(){
   try{wakeLock=await navigator.wakeLock?.request('screen')}catch(e){}
 }
@@ -560,52 +636,62 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 /* ---------- запуск/остановка ---------- */
+function setMainBtn(active){
+  $('btnMain').classList.toggle('active',active);
+  $('icoCam').style.display=active?'none':'block';
+  $('icoStop').style.display=active?'block':'none';
+}
 async function startMode(m){
   mode=m;roi=null;baselineY=null;history=[];
-  hint.style.display='none';
+  welcome.classList.add('hide');
+  tapHint.style.display='flex';
   statusEl.textContent='тапни по поплавку';
   statusEl.className='status-pill watching';
-  $('btnStop').disabled=false;
+  setMainBtn(true);
   stats={bites:0,nibbles:0};updateStats();
   sessionStart=Date.now();$('statTime').textContent='00:00';
   clearInterval(timerInt);timerInt=setInterval(tickTimer,1000);
-  $('stats').style.display='flex';
   if(!rafId)loop();
   requestWakeLock();
 }
-$('btnStop').onclick=()=>{
+function stopAll(){
   mode=null;cancelAnimationFrame(rafId);rafId=null;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
   camTrack=null;torchOn=false;
-  $('chipTorch').style.display='none';$('chipTorch').classList.remove('on');
+  $('torchBtn').style.display='none';$('torchBtn').classList.remove('on');
   $('zoomRow').style.display='none';
   video.style.display='none';sim.style.display='none';
   roi=null;history=[];
   clearInterval(timerInt);timerInt=null;
-  $('stats').style.display='none';
+  tapHint.style.display='none';
   octx.clearRect(0,0,overlay.width,overlay.height);
   tctx.clearRect(0,0,trace.width,trace.height);
-  hint.style.display='block';
+  welcome.classList.remove('hide');
   statusEl.textContent='не активен';statusEl.className='status-pill';
-  $('btnStop').disabled=true;$('calib-label').textContent='';
+  setMainBtn(false);$('calib-label').textContent='';
   wakeLock?.release();wakeLock=null;
-};
+}
+$('btnMain').onclick=()=>{mode?stopAll():startCam(false)};
+
+/* ---------- шторка настроек ---------- */
+function openSheet(){$('sheet').classList.add('open');$('scrim').classList.add('open')}
+function closeSheet(){$('sheet').classList.remove('open');$('scrim').classList.remove('open')}
+$('btnGear').onclick=openSheet;
+$('scrim').onclick=closeSheet;
 
 /* ---------- настройки ---------- */
 $('chipSound').onclick=e=>{soundOn=!soundOn;e.currentTarget.classList.toggle('on',soundOn)};
 $('chipVibro').onclick=e=>{vibroOn=!vibroOn;e.currentTarget.classList.toggle('on',vibroOn)};
 $('chipNight').onclick=e=>{document.body.classList.toggle('night');e.currentTarget.classList.toggle('on')};
-$('chipLog').onclick=e=>{e.currentTarget.classList.toggle('on');$('log').classList.toggle('open')};
+$('chipLog').onclick=()=>$('log').classList.toggle('open');
 $('sens').oninput=e=>{sens=+e.target.value;$('sensVal').textContent=sens};
 
-/* ---------- PWA: регистрация service worker ---------- */
+/* ---------- PWA ---------- */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   });
 }
-
-/* ---------- PWA: кнопка установки (Android/Chrome) ---------- */
 let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();deferredPrompt=e;
