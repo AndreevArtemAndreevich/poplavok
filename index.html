@@ -220,6 +220,57 @@ body.night #welcome{background:radial-gradient(130% 90% at 50% 0%,#200d08 0%,#14
 #tapHint span{font-size:13px;font-weight:600;color:var(--ink);
   background:var(--glass2);border:1px solid var(--stroke);border-radius:12px;padding:8px 16px;
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+
+/* ================= прогноз клёва ================= */
+#fcCard{
+  margin-top:20px;width:min(300px,80vw);padding:12px 16px;border-radius:16px;cursor:pointer;
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--stroke);color:var(--ink);font-family:'Inter',sans-serif;text-align:left;
+  display:flex;align-items:center;gap:14px;transition:transform .15s;
+}
+#fcCard:active{transform:scale(.97)}
+#fcCard .fc-score{font-family:'Russo One',sans-serif;font-size:24px;min-width:40px;text-align:center}
+#fcCard .fc-lines{flex:1;font-size:12px;line-height:1.5;color:var(--dim)}
+#fcCard .fc-lines b{color:var(--ink);font-size:13px}
+#fcPanel{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;
+  background:var(--glass2);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-radius:26px 26px 0 0;border-top:1px solid var(--stroke);
+  padding:10px 20px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(110%);transition:transform .32s cubic-bezier(.32,.72,.35,1);
+  max-height:84dvh;overflow-y:auto;
+}
+#fcPanel.open{transform:none}
+.fc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.fc-top h2{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+.fc-city-row{display:flex;gap:8px;margin-bottom:16px}
+.fc-city-row input{flex:1;min-width:0;padding:11px 14px;border-radius:12px;border:1px solid var(--stroke);
+  background:rgba(255,255,255,.05);color:var(--ink);font-size:16px;font-family:'Inter',sans-serif;outline:none}
+.fc-city-row input::placeholder{color:var(--dim);font-size:13px}
+.fc-city-row input:focus{border-color:rgba(255,90,31,.5)}
+.fc-hero{display:flex;align-items:center;gap:18px;margin:4px 0 16px}
+.fc-gauge{position:relative;width:112px;height:112px;flex:none}
+.fc-gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+.fc-gauge #fcArc{transition:stroke-dasharray .8s ease,stroke .4s}
+.fc-gauge .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Russo One',sans-serif;font-size:28px;gap:2px}
+.fc-gauge .num small{font-size:8.5px;letter-spacing:1.5px;color:var(--dim);font-family:'Inter',sans-serif;font-weight:600;
+  max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-verdict{flex:1}
+.fc-verdict .v{font-family:'Russo One',sans-serif;font-size:17px;margin-bottom:7px}
+.fc-verdict .w{font-size:12.5px;color:var(--dim);line-height:1.55}
+.fc-verdict .w b{color:var(--accent)}
+.fc-facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.ff{background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:12px;padding:8px 10px}
+.ff .t{font-size:8.5px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+.ff .v{font-size:12px;font-weight:600;color:var(--ink)}
+.ff .v .good{color:var(--teal)}
+.ff .v .bad{color:var(--alert)}
+#fcBars{display:flex;align-items:flex-end;gap:2px;height:54px;margin-bottom:4px}
+#fcBars div{flex:1;border-radius:3px 3px 0 0;min-height:3px}
+#fcBarLabels{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-bottom:14px}
+.fc-sun{font-size:11px;color:var(--dim);text-align:center;margin-bottom:5px}
+.fc-src{font-size:9px;color:var(--dim);opacity:.55;text-align:center}
 </style>
 </head>
 <body>
@@ -275,6 +326,10 @@ body.night #welcome{background:radial-gradient(130% 90% at 50% 0%,#200d08 0%,#14
     <div class="ripple"></div>
     <h1>ПОПЛАВОК</h1>
     <div id="welcomeMsg">ИИ-сторож поклёвки. Наведи камеру на поплавок, тапни по нему — дальше слежу я.</div>
+    <button id="fcCard">
+      <div class="fc-score" id="fcCardScore">–</div>
+      <div class="fc-lines" id="fcCardText"><b>Прогноз клёва</b><br>загружаю…</div>
+    </button>
     <button id="btnStartCam">Включить камеру</button>
     <button id="btnDemoWelcome">попробовать демо-режим</button>
   </div>
@@ -297,8 +352,42 @@ body.night #welcome{background:radial-gradient(130% 90% at 50% 0%,#200d08 0%,#14
       <button class="sbtn" id="btnDemo">Демо-режим</button>
       <button class="sbtn" id="chipLog">Журнал событий</button>
     </div>
+    <button class="sbtn" id="btnForecast" style="margin-top:10px;width:100%">Прогноз клёва</button>
     <button class="sbtn accent" id="btnInstall">Установить на телефон</button>
     <div id="log"></div>
+  </div>
+
+  <div id="fcPanel">
+    <div class="handle"></div>
+    <div class="fc-top">
+      <h2>Прогноз клёва</h2>
+      <button class="sbtn" style="flex:none;padding:8px 14px" id="fcRefresh">⟳</button>
+    </div>
+    <div class="fc-city-row">
+      <input id="fcCity" placeholder="Город (например, Боровск)" enterkeyhint="search">
+      <button class="sbtn" style="flex:none" id="fcFind">Найти</button>
+      <button class="sbtn" style="flex:none;padding:11px 13px" id="fcGeo" aria-label="Моя геопозиция">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 21s-6.5-5.6-6.5-10.3a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/></svg>
+      </button>
+    </div>
+    <div class="fc-hero">
+      <div class="fc-gauge">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="8"/>
+          <circle id="fcArc" cx="50" cy="50" r="44" fill="none" stroke="#2FA8A0" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 276"/>
+        </svg>
+        <div class="num"><span id="fcNum">–</span><small id="fcPlace">…</small></div>
+      </div>
+      <div class="fc-verdict">
+        <div class="v" id="fcVerdict">Считаю…</div>
+        <div class="w" id="fcWindow"></div>
+      </div>
+    </div>
+    <div class="fc-facts" id="fcFacts"></div>
+    <div id="fcBars"></div>
+    <div id="fcBarLabels"></div>
+    <div class="fc-sun" id="fcSun"></div>
+    <div class="fc-src">данные: Open-Meteo · автообновление каждые 30 мин</div>
   </div>
 </div>
 
@@ -673,11 +762,189 @@ function stopAll(){
 }
 $('btnMain').onclick=()=>{mode?stopAll():startCam(false)};
 
-/* ---------- шторка настроек ---------- */
-function openSheet(){$('sheet').classList.add('open');$('scrim').classList.add('open')}
-function closeSheet(){$('sheet').classList.remove('open');$('scrim').classList.remove('open')}
+/* ---------- шторки ---------- */
+function closeSheet(){
+  $('sheet').classList.remove('open');
+  $('fcPanel').classList.remove('open');
+  $('scrim').classList.remove('open');
+}
+function openSheet(){closeSheet();$('sheet').classList.add('open');$('scrim').classList.add('open')}
+function openFc(){closeSheet();$('fcPanel').classList.add('open');$('scrim').classList.add('open')}
 $('btnGear').onclick=openSheet;
 $('scrim').onclick=closeSheet;
+$('fcCard').onclick=openFc;
+$('btnForecast').onclick=openFc;
+
+/* =========================================================
+   ПРОГНОЗ КЛЁВА — реальная погода (Open-Meteo, без ключа)
+   + фаза луны + зорьки → оценка 0–10 по рыбацким правилам:
+   стабильное давление, рябь 1–5 м/с, облачно, зорьки,
+   ново/полнолуние — хорошо; шторм и скачки давления — плохо.
+========================================================= */
+const FC_DEFAULT={name:'Боровск',lat:55.206,lon:36.492};
+let fcLoc=null,fcData=null,fcTimer=null;
+try{fcLoc=JSON.parse(localStorage.getItem('fcLoc'))}catch(e){}
+
+function moonInfo(){
+  const ref=Date.UTC(2000,0,6,18,14); // новолуние 06.01.2000 18:14 UTC
+  const ph=(((Date.now()-ref)/864e5/29.530588)%1+1)%1;
+  const ill=Math.round((1-Math.cos(2*Math.PI*ph))/2*100);
+  let name='растущая';
+  if(ph<0.03||ph>0.97)name='новолуние';
+  else if(Math.abs(ph-0.25)<0.03)name='1-я четверть';
+  else if(Math.abs(ph-0.5)<0.03)name='полнолуние';
+  else if(Math.abs(ph-0.75)<0.03)name='посл. четверть';
+  else if(ph>0.5)name='убывающая';
+  const dist=Math.min(ph,Math.abs(ph-0.5),1-ph); // близость к ново/полнолунию
+  const bonus=dist<=0.04?10:dist<=0.1?7:dist<=0.17?5:3;
+  return{ph,ill,name,bonus};
+}
+async function fcFetch(loc){
+  const u='https://api.open-meteo.com/v1/forecast?latitude='+loc.lat+'&longitude='+loc.lon+
+    '&hourly=temperature_2m,surface_pressure,wind_speed_10m,cloud_cover,precipitation'+
+    '&daily=sunrise,sunset&wind_speed_unit=ms&timezone=auto&past_days=1&forecast_days=2';
+  const r=await fetch(u);
+  if(!r.ok)throw new Error('weather http '+r.status);
+  return r.json();
+}
+function hourScore(h,H,sunTimes,moonBonus){
+  const p=H.surface_pressure,d3=p[h]-(p[h-3]??p[h]); // тренд давления за 3ч
+  let s=8;
+  const ad=Math.abs(d3);
+  s+=ad<=0.8?20:(d3<0&&ad<=2.5)?14:(d3>0&&ad<=2.5)?10:2;
+  const w=H.wind_speed_10m[h];
+  s+=(w>=1&&w<=5)?18:(w>5&&w<=8)?10:(w<1)?8:0;
+  const c=H.cloud_cover[h];
+  s+=(c>=25&&c<=85)?12:6;
+  const pr=H.precipitation[h];
+  s+=pr<=0.1?10:pr<=1?8:pr<=3?4:0;
+  const t=H.temperature_2m[h];
+  s+=(t>=8&&t<=24)?8:(t>=4&&t<=28)?5:2;
+  const time=new Date(H.time[h]);
+  const dist=Math.min(...sunTimes.map(st=>Math.abs(time-st)))/36e5;
+  s+=dist<=1.5?12:6; // зорьки — золотое время
+  s+=moonBonus;
+  return Math.min(100,s);
+}
+function fcCompute(data){
+  const H=data.hourly;
+  const now=new Date();
+  let i0=H.time.findIndex(t=>new Date(t)>=now)-1;
+  if(i0<3)i0=3;
+  const sunTimes=[...data.daily.sunrise.slice(1),...data.daily.sunset.slice(1)].map(t=>new Date(t));
+  const moon=moonInfo();
+  const hours=[];
+  for(let k=0;k<24;k++){
+    const h=i0+k;if(h>=H.time.length)break;
+    hours.push({t:new Date(H.time[h]),score:hourScore(h,H,sunTimes,moon.bonus)});
+  }
+  let best=0,bi=0;
+  for(let k=0;k<hours.length-1;k++){
+    const v=hours[k].score+hours[k+1].score;
+    if(v>best){best=v;bi=k}
+  }
+  return{
+    hours,moon,
+    cur:Math.min(10,Math.round(hours[0].score/10)),
+    best:{from:hours[bi].t,to:new Date(hours[bi].t.getTime()+2*36e5),score:Math.min(10,Math.round(best/20))},
+    fact:{
+      p:H.surface_pressure[i0],dp:H.surface_pressure[i0]-H.surface_pressure[i0-3],
+      w:H.wind_speed_10m[i0],c:H.cloud_cover[i0],pr:H.precipitation[i0],t:H.temperature_2m[i0]
+    },
+    sunrise:new Date(data.daily.sunrise[1]||data.daily.sunrise[0]),
+    sunset:new Date(data.daily.sunset[1]||data.daily.sunset[0])
+  };
+}
+const fmtHM=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+const verdictText=v=>v>=8?'Отличный клёв':v>=6?'Хороший клёв':v>=4?'Средний клёв':'Слабый клёв';
+const scoreColor=v=>v>=8?'#3ED598':v>=6?'#2FA8A0':v>=4?'#FF9F43':'#FF3B3B';
+function fcRender(){
+  if(!fcData)return;
+  const R=fcCompute(fcData);
+  const col=scoreColor(R.cur);
+  // карточка на приветствии
+  $('fcCardScore').textContent=R.cur;
+  $('fcCardScore').style.color=col;
+  $('fcCardText').innerHTML='<b>Клёв: '+verdictText(R.cur).split(' ')[0].toLowerCase()+'</b> · '+fcLoc.name+
+    '<br>лучшее окно '+fmtHM(R.best.from)+'–'+fmtHM(R.best.to);
+  // панель
+  $('fcNum').textContent=R.cur;$('fcNum').style.color=col;
+  $('fcPlace').textContent=fcLoc.name.toUpperCase();
+  $('fcArc').style.stroke=col;
+  $('fcArc').setAttribute('stroke-dasharray',(R.cur/10*276).toFixed(0)+' 276');
+  $('fcVerdict').textContent=verdictText(R.cur);
+  $('fcVerdict').style.color=col;
+  $('fcWindow').innerHTML='Лучшее окно: <b>'+fmtHM(R.best.from)+'–'+fmtHM(R.best.to)+'</b> ('+R.best.score+'/10)';
+  const f=R.fact,m=R.moon;
+  const dpTxt=f.dp>0.8?'↗':f.dp<-0.8?'↘':'→';
+  const dpCls=Math.abs(f.dp)<=0.8?'good':Math.abs(f.dp)<=2.5?'':'bad';
+  const wCls=(f.w>=1&&f.w<=5)?'good':f.w>8?'bad':'';
+  $('fcFacts').innerHTML=
+    '<div class="ff"><div class="t">Давление</div><div class="v">'+Math.round(f.p)+' <span class="'+dpCls+'">'+dpTxt+'</span></div></div>'+
+    '<div class="ff"><div class="t">Ветер</div><div class="v"><span class="'+wCls+'">'+f.w.toFixed(1)+' м/с</span></div></div>'+
+    '<div class="ff"><div class="t">Луна</div><div class="v">'+m.ill+'% '+m.name+'</div></div>'+
+    '<div class="ff"><div class="t">Темп.</div><div class="v">'+Math.round(f.t)+'°C</div></div>'+
+    '<div class="ff"><div class="t">Облака</div><div class="v">'+Math.round(f.c)+'%</div></div>'+
+    '<div class="ff"><div class="t">Осадки</div><div class="v">'+(f.pr>0.05?f.pr.toFixed(1)+' мм':'нет')+'</div></div>';
+  $('fcBars').innerHTML=R.hours.map(h=>{
+    const v=h.score/10;
+    return '<div style="height:'+Math.max(6,h.score)+'%;background:'+scoreColor(v)+';opacity:'+(v>=6?'.95':'.5')+'"></div>';
+  }).join('');
+  $('fcBarLabels').innerHTML=R.hours.filter((_,k)=>k%6===0)
+    .map(h=>'<span>'+String(h.t.getHours()).padStart(2,'0')+':00</span>').join('');
+  $('fcSun').textContent='восход '+fmtHM(R.sunrise)+' · закат '+fmtHM(R.sunset)+' · луна: '+m.name+', '+m.ill+'%';
+}
+async function fcLoad(loc,save=true){
+  fcLoc=loc;
+  $('fcCardText').innerHTML='<b>Прогноз клёва</b><br>загружаю '+loc.name+'…';
+  try{
+    fcData=await fcFetch(loc);
+    if(save)localStorage.setItem('fcLoc',JSON.stringify(loc));
+    localStorage.setItem('fcCache',JSON.stringify({loc,data:fcData,ts:Date.now()}));
+    fcRender();
+  }catch(e){
+    try{ // оффлайн у воды — показываем кэш
+      const c=JSON.parse(localStorage.getItem('fcCache'));
+      if(c&&c.data){fcLoc=c.loc;fcData=c.data;fcRender();showToast('📡 Прогноз из кэша (офлайн)')}
+      else $('fcCardText').innerHTML='<b>Прогноз клёва</b><br>нет сети — попробуй позже';
+    }catch(e2){}
+  }
+}
+async function fcSearchCity(){
+  const q=$('fcCity').value.trim();if(!q)return;
+  $('fcFind').textContent='…';
+  try{
+    const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=1&language=ru&format=json');
+    const j=await r.json();
+    if(j.results&&j.results.length){
+      const g=j.results[0];
+      fcLoad({name:g.name,lat:g.latitude,lon:g.longitude});
+      $('fcCity').value='';$('fcCity').blur();
+    }else showToast('🤷 Город не найден');
+  }catch(e){showToast('⚠️ Нет сети')}
+  $('fcFind').textContent='Найти';
+}
+$('fcFind').onclick=fcSearchCity;
+$('fcCity').addEventListener('keydown',e=>{if(e.key==='Enter')fcSearchCity()});
+$('fcRefresh').onclick=()=>{if(fcLoc)fcLoad(fcLoc,false)};
+$('fcGeo').onclick=()=>{
+  if(!navigator.geolocation)return showToast('⚠️ Геолокация недоступна');
+  showToast('📍 Определяю место…');
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const loc={name:'Моя точка',lat:+pos.coords.latitude.toFixed(3),lon:+pos.coords.longitude.toFixed(3)};
+    try{ // обратный геокодинг: название ближайшего города
+      const r=await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+loc.lat+'&longitude='+loc.lon+'&localityLanguage=ru');
+      const j=await r.json();
+      loc.name=j.city||j.locality||loc.name;
+    }catch(e){}
+    fcLoad(loc);
+  },()=>showToast('🚫 Геолокация запрещена'),{timeout:8000});
+};
+window.addEventListener('load',()=>{
+  fcLoad(fcLoc||FC_DEFAULT,!!fcLoc);
+  clearInterval(fcTimer);
+  fcTimer=setInterval(()=>{if(fcLoc)fcLoad(fcLoc,false)},30*60*1000); // реал-тайм: раз в 30 мин
+});
 
 /* ---------- настройки ---------- */
 $('chipSound').onclick=e=>{soundOn=!soundOn;e.currentTarget.classList.toggle('on',soundOn)};
