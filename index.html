@@ -15,105 +15,155 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --water:#0B1B22;
-  --panel:#12262F;
-  --panel2:#0E2029;
+  --water:#081821;
+  --panel:rgba(18,38,47,.88);
+  --panel2:rgba(12,28,36,.9);
   --line:#1E3A45;
   --float-orange:#FF5A1F;
+  --orange2:#FF7A3D;
   --teal:#2FA8A0;
   --sand:#E8F0F0;
   --dim:#7FA0A8;
   --alert:#FF3B3B;
+  --glow:rgba(255,90,31,.35);
+}
+/* ночной режим — красные тона, не слепит глаза */
+body.night{
+  --panel:rgba(26,13,13,.92);
+  --panel2:rgba(20,10,10,.92);
+  --line:#3a1515;
+  --sand:#ffd7cc;
+  --dim:#b07060;
+  --teal:#cc5540;
+  --glow:rgba(255,60,30,.25);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{
-  background:var(--water);
+  background:radial-gradient(120% 80% at 50% 0%,#0F2C38 0%,#081821 55%,#050F15 100%);
   color:var(--sand);
   font-family:'Inter',system-ui,sans-serif;
   overflow:hidden;
   user-select:none;
 }
+body.night{background:radial-gradient(120% 80% at 50% 0%,#1c0d0a 0%,#120806 55%,#0a0404 100%)}
 #app{display:flex;flex-direction:column;height:100dvh}
 
 /* ---------- шапка ---------- */
 header{
   display:flex;align-items:center;justify-content:space-between;
-  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--panel);border-bottom:1px solid var(--line);
-  z-index:10;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);z-index:10;
 }
-.logo{font-family:'Russo One',sans-serif;font-size:17px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
-.logo .bob{display:inline-block;width:10px;height:22px;border-radius:5px;
+.logo{font-family:'Russo One',sans-serif;font-size:17px;letter-spacing:.8px;display:flex;align-items:center;gap:9px;
+  text-shadow:0 0 24px var(--glow)}
+.logo .bob{display:inline-block;width:10px;height:24px;border-radius:5px;
   background:linear-gradient(180deg,var(--float-orange) 0 40%,#fff 40% 55%,#C0262D 55% 100%);
+  box-shadow:0 0 12px var(--glow);
   animation:bob 2.6s ease-in-out infinite}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(3px) rotate(2deg)}}
 .status-pill{
-  font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;
+  font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px;
   background:var(--panel2);border:1px solid var(--line);color:var(--dim);
   transition:all .3s;
 }
-.status-pill.watching{color:var(--teal);border-color:var(--teal)}
-.status-pill.bite{color:#fff;background:var(--alert);border-color:var(--alert);animation:pulse .5s infinite alternate}
-@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.07)}}
+.status-pill.watching{color:var(--teal);border-color:var(--teal);box-shadow:0 0 14px rgba(47,168,160,.25)}
+.status-pill.bite{color:#fff;background:var(--alert);border-color:var(--alert);
+  box-shadow:0 0 20px rgba(255,59,59,.6);animation:pulse .5s infinite alternate}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.08)}}
 
 /* ---------- видео-сцена ---------- */
 #stage{position:relative;flex:1;background:#000;overflow:hidden}
 #video,#simCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #overlay{position:absolute;inset:0;width:100%;height:100%}
+#flash{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .12s;
+  box-shadow:inset 0 0 140px 40px rgba(255,59,59,.6);z-index:5}
+#flash.show{opacity:1}
+
+/* приветственный экран */
 #stage .hint{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  text-align:center;color:var(--dim);font-size:14px;line-height:1.5;
+  text-align:center;color:var(--dim);font-size:14px;line-height:1.6;
   padding:0 30px;pointer-events:none;max-width:340px;
 }
-.hint .big{font-family:'Russo One',sans-serif;color:var(--sand);font-size:18px;margin-bottom:8px}
+.hint .float-big{width:16px;height:46px;border-radius:8px;margin:0 auto;position:relative;
+  background:linear-gradient(180deg,var(--float-orange) 0 40%,#fff 40% 55%,#C0262D 55% 100%);
+  box-shadow:0 0 30px var(--glow);
+  animation:bob 2.6s ease-in-out infinite}
+.hint .ripple{width:70px;height:14px;margin:-4px auto 16px;border-radius:50%;
+  border:2px solid rgba(47,168,160,.45);animation:rip 2.6s ease-out infinite}
+@keyframes rip{0%{transform:scale(.35);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+.hint .big{font-family:'Russo One',sans-serif;color:var(--sand);font-size:19px;margin-bottom:8px;
+  text-shadow:0 0 30px var(--glow)}
 
-/* лента событий поверх видео */
+/* тост поверх видео */
 #toast{
-  position:absolute;top:12px;left:50%;transform:translate(-50%,-20px);
-  background:rgba(11,27,34,.92);border:1px solid var(--float-orange);
+  position:absolute;top:14px;left:50%;transform:translate(-50%,-24px);
+  background:rgba(11,27,34,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--float-orange);
   color:var(--sand);font-weight:600;font-size:14px;
-  padding:8px 18px;border-radius:12px;opacity:0;transition:all .25s;
-  pointer-events:none;white-space:nowrap;
+  padding:9px 20px;border-radius:14px;opacity:0;transition:all .25s;
+  pointer-events:none;white-space:nowrap;z-index:6;
+  box-shadow:0 6px 24px rgba(0,0,0,.4);
 }
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
-/* ---------- сейсмограф поклёвки (фирменный элемент) ---------- */
+/* статистика сессии поверх видео */
+#stats{
+  position:absolute;bottom:12px;left:0;right:0;display:none;
+  justify-content:center;gap:8px;pointer-events:none;z-index:4;
+}
+.stat{
+  background:rgba(8,24,33,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:12px;
+  padding:6px 13px;font-size:12px;font-weight:600;color:var(--sand);
+}
+.stat b{color:var(--float-orange)}
+
+/* ---------- сейсмограф ---------- */
 #trace-wrap{
-  background:var(--panel2);border-top:1px solid var(--line);
-  padding:6px 14px 2px;position:relative;
+  background:var(--panel2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  padding:7px 16px 2px;position:relative;
 }
 #trace-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between}
 #trace{width:100%;height:56px;display:block}
 
 /* ---------- панель управления ---------- */
 #controls{
-  background:var(--panel);padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
   display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);
 }
 .row{display:flex;gap:10px}
 button{
   flex:1;font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:.4px;
-  padding:14px 10px;border-radius:14px;border:1px solid var(--line);
+  padding:14px 10px;border-radius:16px;border:1px solid var(--line);
   background:var(--panel2);color:var(--sand);cursor:pointer;transition:all .15s;
 }
-button:active{transform:scale(.97)}
-button.primary{background:var(--float-orange);border-color:var(--float-orange);color:#fff}
-button.stop{background:transparent;border-color:var(--alert);color:var(--alert)}
-button:disabled{opacity:.35;pointer-events:none}
-.mini-row{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--dim)}
-.chip{
-  flex:1;text-align:center;padding:8px 4px;border-radius:10px;background:var(--panel2);
-  border:1px solid var(--line);font-size:12px;font-weight:600;cursor:pointer;color:var(--dim);
-  font-family:'Inter',sans-serif;
+button:active{transform:scale(.96)}
+button.primary{
+  background:linear-gradient(135deg,var(--orange2),var(--float-orange));
+  border-color:transparent;color:#fff;
+  box-shadow:0 4px 22px var(--glow);
 }
-.chip.on{color:var(--float-orange);border-color:var(--float-orange)}
+button.stop{background:transparent;border-color:var(--alert);color:var(--alert)}
+button:disabled{opacity:.35;pointer-events:none;box-shadow:none}
+.chip{
+  flex:1;text-align:center;padding:9px 4px;border-radius:12px;background:var(--panel2);
+  border:1px solid var(--line);font-size:11.5px;font-weight:600;cursor:pointer;color:var(--dim);
+  font-family:'Inter',sans-serif;transition:all .2s;
+}
+.chip.on{color:var(--float-orange);border-color:var(--float-orange);box-shadow:0 0 12px var(--glow)}
 
-/* чувствительность */
+/* слайдеры */
 .sens{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim)}
 .sens input{flex:1;accent-color:var(--float-orange)}
+#zoomRow{display:none}
 
 /* журнал */
 #log{
@@ -124,8 +174,7 @@ button:disabled{opacity:.35;pointer-events:none}
 #log div{padding:3px 0;border-bottom:1px dashed var(--line)}
 #log b{color:var(--sand)}
 
-/* кнопка установки PWA */
-#btnInstall{display:none}
+#btnInstall{display:none;font-size:13px;padding:11px 10px}
 </style>
 </head>
 <body>
@@ -139,11 +188,19 @@ button:disabled{opacity:.35;pointer-events:none}
     <video id="video" autoplay playsinline muted style="display:none"></video>
     <canvas id="simCanvas" style="display:none"></canvas>
     <canvas id="overlay"></canvas>
+    <div id="flash"></div>
     <div class="hint" id="hint">
+      <div class="float-big"></div>
+      <div class="ripple"></div>
       <div class="big">Ассаляму алейкум, рыбак! 🎣</div>
       Включи камеру и наведи на поплавок,<br>или попробуй демо-режим на диване.
     </div>
     <div id="toast"></div>
+    <div id="stats">
+      <div class="stat">🎣 <b id="statBites">0</b></div>
+      <div class="stat">👀 <b id="statNibbles">0</b></div>
+      <div class="stat">⏱ <b id="statTime">00:00</b></div>
+    </div>
   </div>
 
   <div id="trace-wrap">
@@ -160,7 +217,14 @@ button:disabled{opacity:.35;pointer-events:none}
     <div class="row">
       <div class="chip on" id="chipSound">🔊 Звук</div>
       <div class="chip on" id="chipVibro">📳 Вибро</div>
-      <div class="chip" id="chipLog">📜 Журнал</div>
+      <div class="chip" id="chipNight">🌙 Ночь</div>
+      <div class="chip" id="chipTorch" style="display:none">🔦 Свет</div>
+      <div class="chip" id="chipLog">📜 Лог</div>
+    </div>
+    <div class="sens" id="zoomRow">
+      🔍 Зум
+      <input type="range" id="zoom" min="1" max="5" step="0.1" value="1">
+      <span id="zoomVal">1×</span>
     </div>
     <div class="sens">
       Чувствительность
@@ -184,10 +248,12 @@ button:disabled{opacity:.35;pointer-events:none}
 const $=id=>document.getElementById(id);
 const video=$('video'),sim=$('simCanvas'),overlay=$('overlay'),trace=$('trace');
 const octx=overlay.getContext('2d'),tctx=trace.getContext('2d');
-const statusEl=$('status'),hint=$('hint'),toast=$('toast');
+const statusEl=$('status'),hint=$('hint'),toast=$('toast'),flash=$('flash');
 
 let mode=null;            // 'cam' | 'demo'
 let stream=null,rafId=null;
+let camTrack=null;        // видеотрек для зума/фонарика
+let torchOn=false;
 let roi=null;             // {x,y,w,h} в координатах кадра
 let baselineY=null;       // опорная вертикаль поплавка
 let calibUntil=0;         // конец калибровки
@@ -199,6 +265,8 @@ let sens=5;
 let procCanvas=document.createElement('canvas');
 let pctx=procCanvas.getContext('2d',{willReadFrequently:true});
 let wakeLock=null;
+let stats={bites:0,nibbles:0};
+let sessionStart=0,timerInt=null;
 
 /* ---------- аудио ---------- */
 let actx=null;
@@ -230,6 +298,15 @@ function logEvent(msg){
   el.innerHTML=`<b>${hh}:${mm}:${ss}</b> — ${msg}`;
   $('log').prepend(el);
 }
+function screenFlash(){
+  flash.classList.add('show');
+  clearTimeout(screenFlash._t);
+  screenFlash._t=setTimeout(()=>flash.classList.remove('show'),600);
+}
+function updateStats(){
+  $('statBites').textContent=stats.bites;
+  $('statNibbles').textContent=stats.nibbles;
+}
 function fireEvent(type){
   const now=performance.now();
   if(now-lastEventT<1500)return; // антидребезг
@@ -237,10 +314,11 @@ function fireEvent(type){
   statusEl.textContent={tug:'ПОКЛЁВКА!',lift:'выложило!',nibble:'потюкивает',lost:'поплавок пропал!'}[type];
   statusEl.className='status-pill bite';
   setTimeout(()=>{if(mode){statusEl.textContent='слежу…';statusEl.className='status-pill watching'}},2500);
-  if(type==='tug'){showToast('🎣 ПОКЛЁВКА! Притопило!','var(--alert)');beep(1200,0.12,4);vibrate([200,80,200,80,400]);logEvent('поклёвка — поплавок притопило')}
-  if(type==='lift'){showToast('⬆️ Выложило! Подсекай!','var(--alert)');beep(600,0.2,3);vibrate([300,100,300]);logEvent('подъём — поплавок выложило')}
-  if(type==='nibble'){showToast('👀 Потюкивает…','var(--teal)');beep(880,0.08,2);vibrate([80,60,80]);logEvent('потюкивание')}
+  if(type==='tug'){stats.bites++;screenFlash();showToast('🎣 ПОКЛЁВКА! Притопило!','var(--alert)');beep(1200,0.12,4);vibrate([200,80,200,80,400]);logEvent('поклёвка — поплавок притопило')}
+  if(type==='lift'){stats.bites++;screenFlash();showToast('⬆️ Выложило! Подсекай!','var(--alert)');beep(600,0.2,3);vibrate([300,100,300]);logEvent('подъём — поплавок выложило')}
+  if(type==='nibble'){stats.nibbles++;showToast('👀 Потюкивает…','var(--teal)');beep(880,0.08,2);vibrate([80,60,80]);logEvent('потюкивание')}
   if(type==='lost'){showToast('❓ Потерял поплавок','var(--float-orange)');beep(300,0.4,1);vibrate([500]);logEvent('поплавок вне зоны — проверь удочку!')}
+  updateStats();
 }
 
 /* ---------- обработка кадра ---------- */
@@ -321,14 +399,20 @@ function loop(){
   }
   history.push(dev);if(history.length>240)history.shift();
 
-  // рисуем рамку и маркер
-  octx.strokeStyle='#FF5A1F';octx.lineWidth=2;
+  // рамка ROI: пунктир со свечением
+  octx.save();
+  octx.shadowColor='#FF5A1F';octx.shadowBlur=10;
+  octx.strokeStyle='#FF5A1F';octx.lineWidth=2;octx.setLineDash([7,5]);
   octx.strokeRect(roi.x*sx,roi.y*sy,roi.w*sx,roi.h*sy);
+  octx.restore();
   if(cy!==null){
+    octx.save();
+    octx.shadowColor='#FF5A1F';octx.shadowBlur=14;
     octx.beginPath();
     octx.arc((roi.x+roi.w/2)*sx,(roi.y+cy)*sy,6,0,7);
     octx.fillStyle='#FF5A1F';octx.fill();
     octx.strokeStyle='#fff';octx.lineWidth=1.5;octx.stroke();
+    octx.restore();
   }
   drawTrace();
 }
@@ -348,8 +432,12 @@ function drawTrace(){
     i?tctx.lineTo(x,y):tctx.moveTo(x,y);
   });
   const last=Math.abs(history[history.length-1]);
-  tctx.strokeStyle=last>noiseStd*3?'#FF3B3B':'#2FA8A0';
+  const hot=last>noiseStd*3;
+  tctx.shadowColor=hot?'#FF3B3B':'#2FA8A0';
+  tctx.shadowBlur=8*devicePixelRatio;
+  tctx.strokeStyle=hot?'#FF3B3B':'#2FA8A0';
   tctx.lineWidth=1.5*devicePixelRatio;tctx.stroke();
+  tctx.shadowBlur=0;
 }
 
 /* ---------- выбор поплавка тапом ---------- */
@@ -366,6 +454,7 @@ overlay.addEventListener('pointerdown',e=>{
   showToast('🎯 Поплавок захвачен, калибруюсь…');
   if(actx===null)beep(880,0.05,1); // разблокировать аудио жестом
 });
+overlay.addEventListener('contextmenu',e=>e.preventDefault());
 
 /* ---------- камера ---------- */
 $('btnCam').onclick=async()=>{
@@ -373,11 +462,36 @@ $('btnCam').onclick=async()=>{
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}},audio:false});
     video.srcObject=stream;video.style.display='block';sim.style.display='none';
     await video.play();
+    camTrack=stream.getVideoTracks()[0];
+    setupCamExtras();
     startMode('cam');
   }catch(err){
     showToast('⚠️ Нет доступа к камере','var(--alert)');
     logEvent('ошибка камеры: '+err.message);
   }
+};
+
+/* зум и фонарик — если камера умеет */
+function setupCamExtras(){
+  const caps=camTrack.getCapabilities?.()||{};
+  if(caps.zoom){
+    const z=$('zoom');
+    z.min=caps.zoom.min;z.max=caps.zoom.max;z.step=caps.zoom.step||0.1;
+    z.value=camTrack.getSettings().zoom||caps.zoom.min;
+    $('zoomVal').textContent=(+z.value).toFixed(1)+'×';
+    $('zoomRow').style.display='flex';
+  }
+  if(caps.torch)$('chipTorch').style.display='block';
+}
+$('zoom').oninput=async e=>{
+  const v=+e.target.value;
+  $('zoomVal').textContent=v.toFixed(1)+'×';
+  try{await camTrack.applyConstraints({advanced:[{zoom:v}]})}catch(err){}
+};
+$('chipTorch').onclick=async e=>{
+  torchOn=!torchOn;
+  try{await camTrack.applyConstraints({advanced:[{torch:torchOn}]})}catch(err){torchOn=false}
+  e.currentTarget.classList.toggle('on',torchOn);
 };
 
 /* ---------- демо-режим (симуляция пруда) ---------- */
@@ -390,6 +504,12 @@ function drawSim(){
   grd.addColorStop(0,'#0F3040');grd.addColorStop(1,'#071820');
   c.fillStyle=grd;c.fillRect(0,0,W,H);
   simT+=0.03;
+  // лунная дорожка
+  const moon=c.createRadialGradient(W*0.72,40,4,W*0.72,40,60);
+  moon.addColorStop(0,'rgba(220,235,240,0.7)');moon.addColorStop(1,'rgba(220,235,240,0)');
+  c.fillStyle=moon;c.beginPath();c.arc(W*0.72,40,60,0,7);c.fill();
+  c.fillStyle='rgba(200,225,235,0.05)';
+  for(let i=0;i<10;i++)c.fillRect(W*0.72-30+Math.sin(simT*2+i)*10,110+i*35,60,3);
   // рябь
   c.strokeStyle='rgba(120,180,190,0.15)';
   for(let i=0;i<7;i++){
@@ -424,6 +544,21 @@ $('btnDemo').onclick=()=>{
   showToast('🛋️ Демо: тапни по поплавку');
 };
 
+/* ---------- таймер сессии ---------- */
+function tickTimer(){
+  const s=Math.floor((Date.now()-sessionStart)/1000);
+  const mm=String(Math.floor(s/60)).padStart(2,'0'),ss=String(s%60).padStart(2,'0');
+  $('statTime').textContent=mm+':'+ss;
+}
+
+/* ---------- wake lock (не давать экрану гаснуть) ---------- */
+async function requestWakeLock(){
+  try{wakeLock=await navigator.wakeLock?.request('screen')}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&mode)requestWakeLock();
+});
+
 /* ---------- запуск/остановка ---------- */
 async function startMode(m){
   mode=m;roi=null;baselineY=null;history=[];
@@ -431,14 +566,23 @@ async function startMode(m){
   statusEl.textContent='тапни по поплавку';
   statusEl.className='status-pill watching';
   $('btnStop').disabled=false;
+  stats={bites:0,nibbles:0};updateStats();
+  sessionStart=Date.now();$('statTime').textContent='00:00';
+  clearInterval(timerInt);timerInt=setInterval(tickTimer,1000);
+  $('stats').style.display='flex';
   if(!rafId)loop();
-  try{wakeLock=await navigator.wakeLock?.request('screen')}catch(e){}
+  requestWakeLock();
 }
 $('btnStop').onclick=()=>{
   mode=null;cancelAnimationFrame(rafId);rafId=null;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  camTrack=null;torchOn=false;
+  $('chipTorch').style.display='none';$('chipTorch').classList.remove('on');
+  $('zoomRow').style.display='none';
   video.style.display='none';sim.style.display='none';
   roi=null;history=[];
+  clearInterval(timerInt);timerInt=null;
+  $('stats').style.display='none';
   octx.clearRect(0,0,overlay.width,overlay.height);
   tctx.clearRect(0,0,trace.width,trace.height);
   hint.style.display='block';
@@ -450,6 +594,7 @@ $('btnStop').onclick=()=>{
 /* ---------- настройки ---------- */
 $('chipSound').onclick=e=>{soundOn=!soundOn;e.currentTarget.classList.toggle('on',soundOn)};
 $('chipVibro').onclick=e=>{vibroOn=!vibroOn;e.currentTarget.classList.toggle('on',vibroOn)};
+$('chipNight').onclick=e=>{document.body.classList.toggle('night');e.currentTarget.classList.toggle('on')};
 $('chipLog').onclick=e=>{e.currentTarget.classList.toggle('on');$('log').classList.toggle('open')};
 $('sens').oninput=e=>{sens=+e.target.value;$('sensVal').textContent=sens};
 

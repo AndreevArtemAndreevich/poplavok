@@ -1,6 +1,6 @@
 // Service worker для оффлайн-работы «Поплавка».
 // Меняй версию при обновлении файлов, чтобы кэш обновился.
-const CACHE = 'poplavok-v1';
+const CACHE = 'poplavok-v2';
 const ASSETS = [
   './',
   './index.html',
